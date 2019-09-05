@@ -1,7 +1,10 @@
 package main
-import "fmt"
+import("fmt"
+	   "net/rpc"
+	   "log"
+	   "server")
 func main(){
-	client, err := rpc.DialHTTP("tcp", serverAddress + ":1234")
+	client, err := rpc.DialHTTP("tcp", "127.0.0.1" + ":1234")
 	if err != nil {
 		log.Fatal("dialing:", err)
 	}
