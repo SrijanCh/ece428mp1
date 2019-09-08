@@ -5,24 +5,31 @@ import(
 	   "net/rpc"
 	   "net/http"
 	   "net"
-	   "server"
+	   "rpctest"
 	   )
 func main(){
-	arith := new(server.Arith)
+	arith := new(rpctest.Arith)
 	rpc.Register(arith)
 	rpc.HandleHTTP()
 	fmt.Printf("Start listening: \n");
-	l, e := net.Listen("tcp", "127.0.0.1:3074")
+	l, e := net.Listen("tcp", ":1234")
 	if e != nil {
 		log.Fatal("listen error:", e)
 	}
-	for {
-		conn, err := l.Accept()
-		if err != nil {
-			log.Fatal("accept error:", err)
-		}
-		conn.Close()
-	}
-	fmt.Printf("Done. \n");
-	go http.Serve(l, nil)
+	// for {
+	// 	conn, err := l.Accept()
+	// 	if err != nil {
+	// 		log.Fatal("accept error:", err)
+	// 	} else{
+	// 		fmt.Printf("GOT ONE\n")
+	// 	}
+	// 	conn.LocalAddr()
+	// 	conn.Close();
+	// 	// if a > 0 {
+	// 	// 	fmt.Printf("stfu")
+	// 	// }
+	// }
+	
+	fmt.Printf("Serving RPC server on port %d", 1234);
+	http.Serve(l, nil)
 }

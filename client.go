@@ -2,14 +2,14 @@ package main
 import("fmt"
 	   "net/rpc"
 	   "log"
-	   "server")
+		"rpctest")
 func main(){
-	client, err := rpc.DialHTTP("tcp", "127.0.0.1" + ":3074")
+	client, err := rpc.DialHTTP("tcp", "localhost" + ":1234")
 	if err != nil {
 		log.Fatal("dialing:", err)
 	}
 	// Synchronous call
-	args := &server.Args{7,8}
+	args := &rpctest.Args{7,8}
 	var reply int
 	err = client.Call("Arith.Multiply", args, &reply)
 	if err != nil {
