@@ -1,23 +1,19 @@
+Heyoo
 package main
 import(
 		"fmt"
 	    "net/rpc"
 	    "log"
-		// "querier"
-		// "strings"
+		"querier"
 	  )
-
-type Args struct {
-	Data, Filepath string
-}
 
 func main(){
 	client, err := rpc.DialHTTP("tcp", "localhost" + ":1234")
 	if err != nil {log.Fatal("dialing:", err)}
 	// Synchronous call
-	args := Args{Data: "He", Filepath: "machine.i.log"}
+	args := &querier.Args{"He","machine.i.log"}
+	fmt.Printf("Args{Data = %s, Filepath = %s}\n", args.Data, args.Filepath)
 	var reply string
-	fmt.Printf("%T, %T\n", args, reply)
 	err = client.Call("Querier.Grep", args, &reply)
 	if err != nil {
 		fmt.Printf("WE FUCKED UP\n")
