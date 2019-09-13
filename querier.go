@@ -3,7 +3,8 @@ import (
 		"fmt"
 		"bytes"
     	"os/exec"
-	    "log"
+	    // "log"
+	    // "fmt"
 		)
 
 type Args struct {
@@ -17,11 +18,13 @@ func (t *Querier) Grep(args Args, reply *string) error {
 	cmd := exec.Command("grep", args.Data, args.Filepath)
 	var out bytes.Buffer
 	cmd.Stdout = &out
-	e := cmd.Run()
-    if e != nil {
-		log.Fatal(e)
-		return e
-    }
+	// e := cmd.Run()
+	cmd.Run()
+  //	Fuck errors we goin raw
+  //   else if e != nil {
+		// log.Fatal(e)
+		// return e
+  //   }
     *reply = out.String();
 	return nil
 }

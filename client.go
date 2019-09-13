@@ -3,6 +3,7 @@ import(
 		"fmt"
 	    "net/rpc"
 	    "log"
+	    "os"
 		// "querier"
 		// "strings"
 	  )
@@ -15,7 +16,7 @@ func main(){
 	client, err := rpc.DialHTTP("tcp", "localhost" + ":1234")
 	if err != nil {log.Fatal("dialing:", err)}
 	// Synchronous call
-	args := Args{Data: "He", Filepath: "machine.i.log"}
+	args := Args{Data: os.Args[1], Filepath: "machine.i.log"}
 	var reply string
 	fmt.Printf("%T, %T\n", args, reply)
 	err = client.Call("Querier.Grep", args, &reply)
