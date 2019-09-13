@@ -48,7 +48,7 @@ func main(){
 
 
 func rgrep(addr, arg string) int{
-	client, err := rpc.DialHTTP("tcp", addr + ":1234")
+	client, err := rpc.DialHTTP("tcp", addr + ":3074")
 	if err != nil {
 		fmt.Printf(err.Error())
 		return 1
