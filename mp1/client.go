@@ -2,49 +2,46 @@ package main
 import(
 		"fmt"
 	    "net/rpc"
-	    // "log"
 	    "os"
 		"querier"
-		// "strings"
+    	"bufio"
+    	"container/list"
 	  )
 
-// type Args struct {
-// 	Data, Filepath string
-// }
-
 func main(){
-	// client, err := rpc.DialHTTP("tcp", "localhost" + ":1234")
-	// if err != nil {log.Fatal("dialing:", err)}
-	// // Synchronous call
-	// var args = querier.Args{Data: "", Filepath: "machine.i.log"}
-	// if len(os.Args) > 1 {
-	// 	args = querier.Args{Data: os.Args[1], Filepath: "machine.i.log"}
-	// }
-	// var reply string
-	// // fmt.Printf("%T, %T\n", args, reply)
-	// err = client.Call("Querier.Grep", args, &reply)
-	// if err != nil {
-	// 	// fmt.Printf("WE FUCKED UP\n")
-	// 	log.Fatal("query error: ", err)
-	// }
-	// name, err := os.Hostname()
-	// if err != nil {
- 	//     	fmt.Printf("Oops: %v\n", err)
- 	//    	return
-	// }
-	// fmt.Printf("%s reports:\n %s\n", name, reply)\
-	var data = ""
-	var addr = "localhost"
-	if len(os.Args) > 1 {
-		data = os.Args[1]
+	ips := list.New()
+
+	file, err := os.Open("../iptables.txt")
+	defer file.Close()
+
+	if err != nil {
+    	fmt.Println("Error opening file")
+    	return	
 	}
-	
-	rval := rgrep(addr, data);
-	if rval == 1 {
-		fmt.Printf("Failed to connect to %s\n", addr)
-	}
-	if rval == 2 {
-		fmt.Printf("RPC failed at %s\n", addr)
+
+	reader := bufio.NewReader(file)
+	var line string
+	for {
+    	line, err = reader.ReadString('\n')
+    	ips.PushBack(line)
+    	if err != nil {
+        	break
+    	}
+    }
+
+    for addr := ips.Front(); addr != nil; addr = addr.Next() {
+		var data = ""
+		if len(os.Args) > 1 {
+			data = os.Args[1]
+		}
+		var s_addr string = fmt.Sprintf("%v", addr.Value)
+		rval := rgrep(s_addr, data);
+		if rval == 1 {
+			fmt.Printf("Failed to connect to %s\n", addr.Value)
+		}
+		if rval == 2 {
+			fmt.Printf("RPC failed at %s\n", addr.Value)
+		}
 	}
 }
 
