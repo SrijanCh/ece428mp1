@@ -67,6 +67,6 @@ func rgrep(addr, arg string) int{
 	if err != nil {
 		return 2
 	}
-	fmt.Printf(reply)
+	fmt.Printf("%s\n", reply)
 	return 0
 }
