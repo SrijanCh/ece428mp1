@@ -53,11 +53,11 @@ func main(){
 
 
 func rgrep(addr, arg string) int{
-	fmt.Printf("Setting connection to %s\n", addr + ":3074")
+	// fmt.Printf("Setting connection to %s\n", addr + ":3074")
 	client, err := rpc.DialHTTP("tcp", addr + ":3074")
 	if err != nil {
-		fmt.Printf(err.Error())
-		fmt.Printf("\n")
+		// fmt.Printf(err.Error())
+		// fmt.Printf("\n")
 		return 1
 	}
 	// Synchronous call
