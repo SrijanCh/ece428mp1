@@ -61,7 +61,7 @@ func rgrep(addr, arg string) int{
 		return 1
 	}
 	// Synchronous call
-	var args = querier.Args{Data: arg, Filepath: "machine.i.log"}
+	var args = querier.Args{Data: arg, Filepath: "/home/srijanc2/machine.i.log"}
 	var reply string
 	err = client.Call("Querier.Grep", args, &reply)
 	if err != nil {

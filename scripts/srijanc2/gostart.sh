@@ -20,7 +20,8 @@ while [ $i -lt 11 ]; do
             cd go_work/src/mp1
             go build client.go
             go build host.go
-            nohup ./host &>/dev/null &
+            # nohup ./host &>/dev/null &
+            nohup ./host &>nohup.out &
         else
             echo "Unrecognized command line option"
         fi

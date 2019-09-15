@@ -19,9 +19,9 @@ func (t *Querier) Grep(args Args, reply *string) error {
 	cmd := exec.Command("grep", "-n", args.Data, args.Filepath)
 	var out bytes.Buffer
 	cmd.Stdout = &out
-	// e := cmd.Run()
 	cmd.Run()
   //	Fuck errors we goin raw
+	// e := cmd.Run()
   //   else if e != nil {
 		// log.Fatal(e)
 		// return e
