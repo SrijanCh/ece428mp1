@@ -49,9 +49,10 @@ func main(){
 			continue
 		}
 
-		var filep string = fmt.Sprintf("vm%d.log", i)
+		// var filep string = fmt.Sprintf("vm%d.log", i)
 
 		rval := homegrep(s_addr[:len(s_addr)-1], data, filep);
+		// rval := loggrep(s_addr[:len(s_addr)-1], data);
 		if rval == 1 {
 			fmt.Printf("Failed to connect to %s\n", addr.Value)
 		}
@@ -65,6 +66,7 @@ func main(){
 
 func loggrep(addr, arg string) int{
 	client, err := rpc.DialHTTP("tcp", addr + ":3074")
+	// client, err := rpc.DialHTTP("tcp", "localhost" + ":3074")
 	if err != nil {
 		// fmt.Printf(err.Error())
 		// fmt.Printf("\n")
@@ -72,6 +74,7 @@ func loggrep(addr, arg string) int{
 	}
 	// Synchronous call
 	var args = querier.Args{Data: arg, Filepath: "/home/srijanc2/machine.i.log"}
+	// var args = querier.Args{Data: arg, Filepath: "machine.i.log"}
 	var reply string
 	err = client.Call("Querier.Grep", args, &reply)
 	if err != nil {
