@@ -20,6 +20,7 @@ func (t *Querier) Grep(args Args, reply *string) error {
 
 	fmt.Printf("Args{Data = %s, Filepath = %s\n",args.Data,args.Filepath)
 	s := strings.Fields(args.Data)
+	s = append(s, "   ")
 	s = append(s, args.Filepath)
 	fmt.Printf("Splice: %v\n\n", s)
 	cmd := exec.Command("grep", s...)//, args.Filepath)

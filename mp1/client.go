@@ -33,7 +33,7 @@ func main(){
 
     var i int = 1
     for addr := ips.Front(); addr != nil; addr = addr.Next() {
-		var data string = ""
+		var data string = " "
 
 		for j := 1; j < len(os.Args); j++{
 			data += os.Args[j] + " "
