@@ -49,7 +49,7 @@ func main(){
 			continue
 		}
 
-		// var filep string = fmt.Sprintf("vm%d.log", i)
+		var filep string = fmt.Sprintf("vm%d.log", i)
 
 		rval := homegrep(s_addr[:len(s_addr)-1], data, filep);
 		// rval := loggrep(s_addr[:len(s_addr)-1], data);
