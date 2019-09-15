@@ -42,11 +42,11 @@ func main(){
 			continue
 		}
 
-		var filep string = fmt.Sprintf("vm%d.log", i)
+		// var filep string = fmt.Sprintf("vm%d.log", i)
 
 		// fmt.Printf("homegrepping %s\n", filep)
 
-		// rval := loggrep(s_addr[:len(s_addr)-1], data);
+		rval := loggrep(s_addr[:len(s_addr)-1], data);
 		// if rval == 1 {
 		// 	fmt.Printf("Failed to connect to %s\n", addr.Value)
 		// }
@@ -54,7 +54,7 @@ func main(){
 		// 	fmt.Printf("RPC failed at %s\n", addr.Value)
 		// }
 
-		rval := homegrep(s_addr[:len(s_addr)-1], data, filep);
+		// rval := loggrep(s_addr[:len(s_addr)-1], data, filep);
 		if rval == 1 {
 			fmt.Printf("Failed to connect to %s\n", addr.Value)
 		}

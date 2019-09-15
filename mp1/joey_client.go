@@ -54,7 +54,7 @@ func main(){
 		// 	fmt.Printf("RPC failed at %s\n", addr.Value)
 		// }
 
-		rval := homegrep(s_addr[:len(s_addr)-1], data, filep);
+		rval := joey_homegrep(s_addr[:len(s_addr)-1], data, filep);
 		if rval == 1 {
 			fmt.Printf("Failed to connect to %s\n", addr.Value)
 		}
