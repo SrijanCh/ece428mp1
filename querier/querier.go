@@ -7,6 +7,7 @@ import (
 	    // "log"
 	    "fmt"
 	    "strings"
+		"strconv"
 		)
 
 type Args struct {
@@ -34,6 +35,8 @@ func (t *Querier) Grep(args Args, reply *string) error {
   	if e != nil{
   		name = "irresolvable"
   	}
-    *reply = name + ":\n" + out.String();
+  	numlines := strings.Count(out.String(), "\n")
+	str1 := strconv.Itoa(numlines)
+    *reply = name + ":\n" + out.String() + "[" + str1 + "]\n";
 	return nil
 }
