@@ -6,6 +6,7 @@ import (
     	"os"
 	    // "log"
 	    "fmt"
+	    "strings"
 		)
 
 type Args struct {
@@ -15,13 +16,15 @@ type Args struct {
 type Querier int
 
 func (t *Querier) Grep(args Args, reply *string) error {
+
 	fmt.Printf("Args{Data = %s, Filepath = %s\n",args.Data,args.Filepath)
-	cmd := exec.Command("grep", "-n", args.Data, args.Filepath)
+	s := strings.Split(" ", args.Data)
+	s = append(s, args.Filepath)
+	cmd := exec.Command("grep", s...)//, args.Filepath)
 	var out bytes.Buffer
 	cmd.Stdout = &out
 	cmd.Run()
   //	Fuck errors we goin raw
-	// e := cmd.Run()
   //   else if e != nil {
 		// log.Fatal(e)
 		// return e

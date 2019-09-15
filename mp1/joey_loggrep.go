@@ -33,25 +33,28 @@ func main(){
 
     var i int = 1
     for addr := ips.Front(); addr != nil; addr = addr.Next() {
-		var data string = ""
-
-		for j := 1; j < len(os.Args); j++{
-			data += os.Args[j] + " "
+		var data = ""
+		if len(os.Args) > 1 {
+			data = os.Args[1]
 		}
-
-	// fmt.Printf("grep" + data + "standin\n")
-		// if len(os.Args) > 1 {
-		// 	data = os.Args[1]
-		// }
-		
 		var s_addr string = fmt.Sprintf("%v", addr.Value)
 		if len(s_addr) - 1 < 0{
 			continue
 		}
 
-		var filep string = fmt.Sprintf("vm%d.log", i)
+		// var filep string = fmt.Sprintf("vm%d.log", i)
 
-		rval := homegrep(s_addr[:len(s_addr)-1], data, filep);
+		// fmt.Printf("homegrepping %s\n", filep)
+
+		// rval := loggrep(s_addr[:len(s_addr)-1], data);
+		// if rval == 1 {
+		// 	fmt.Printf("Failed to connect to %s\n", addr.Value)
+		// }
+		// if rval == 2 {
+		// 	fmt.Printf("RPC failed at %s\n", addr.Value)
+		// }
+
+		rval := joey_loggrep(s_addr[:len(s_addr)-1], data);
 		if rval == 1 {
 			fmt.Printf("Failed to connect to %s\n", addr.Value)
 		}
@@ -64,6 +67,7 @@ func main(){
 }
 
 func loggrep(addr, arg string) int{
+	// fmt.Printf("Setting connection to %s\n", addr + ":3074")
 	client, err := rpc.DialHTTP("tcp", addr + ":3074")
 	if err != nil {
 		// fmt.Printf(err.Error())
