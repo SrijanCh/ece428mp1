@@ -23,7 +23,9 @@ func main(){
 	var line string
 	for {
     	line, err = reader.ReadString('\n')
+    	// ips.PushBack(line[:len(line)-1])
     	ips.PushBack(line)
+    	// fmt.Printf("%s, abc", line[:len(line)-1])
     	if err != nil {
         	break
     	}
@@ -35,7 +37,10 @@ func main(){
 			data = os.Args[1]
 		}
 		var s_addr string = fmt.Sprintf("%v", addr.Value)
-		rval := rgrep(s_addr, data);
+		if len(s_addr) - 1 < 0{
+			continue
+		}
+		rval := rgrep(s_addr[:len(s_addr)-1], data);
 		if rval == 1 {
 			fmt.Printf("Failed to connect to %s\n", addr.Value)
 		}
@@ -48,17 +53,20 @@ func main(){
 
 
 func rgrep(addr, arg string) int{
-	client, err := rpc.DialHTTP("tcp", addr + ":1234")
+	// fmt.Printf("Setting connection to %s\n", addr + ":3074")
+	client, err := rpc.DialHTTP("tcp", addr + ":3074")
 	if err != nil {
+		// fmt.Printf(err.Error())
+		// fmt.Printf("\n")
 		return 1
 	}
 	// Synchronous call
-	var args = querier.Args{Data: arg, Filepath: "~/machine.i.log"}
+	var args = querier.Args{Data: arg, Filepath: "/home/srijanc2/machine.i.log"}
 	var reply string
 	err = client.Call("Querier.Grep", args, &reply)
 	if err != nil {
 		return 2
 	}
-	fmt.Printf(reply)
+	fmt.Printf("%s\n", reply)
 	return 0
 }
