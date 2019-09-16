@@ -1,12 +1,13 @@
 import random
 import os
 import socket
+import datetime 
 
 NUMLINES = 50
 MAXWORDSONLINE = 10
 MINWORDSONLINE = 1
-HOSTNAMEREPEATINTERVAL = 5
-LOGFILEOUTPUTNAME = "~/machine.i.log"
+REGEXREPEATINTERVAL = 5
+LOGFILEOUTPUTNAME = "~/machine.i.log_regexdate"
 
 outputstring = ""
 with open('engmix.txt', 'r') as myfile:
@@ -17,8 +18,8 @@ with open('engmix.txt', 'r') as myfile:
         # create random number of words on the line 
         numwords = random.randint(MINWORDSONLINE, MAXWORDSONLINE + 1)
         wordnum = 1
-        if linenum % HOSTNAMEREPEATINTERVAL == 0:
-            outputstring += socket.gethostname()
+        if linenum % REGEXREPEATINTERVAL == 0:
+            outputstring += str(datetime.datetime.now())
         else:
             while wordnum <= numwords:
                 randwordnum = random.randint(0, len(words))
