@@ -7,7 +7,7 @@ NUMLINES = 50
 MAXWORDSONLINE = 10
 MINWORDSONLINE = 1
 REGEXREPEATINTERVAL = 5
-LOGFILEOUTPUTNAME = "~/machine.i.log_regexdate"
+LOGFILEOUTPUTNAME = "~/machine.i.log"
 
 outputstring = ""
 with open('engmix.txt', 'r') as myfile:
