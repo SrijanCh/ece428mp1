@@ -36,6 +36,15 @@ import (
 // 	return nil
 // }
 
+const(
+	HEARTBEAT byte = 0
+	JOIN byte = 1
+	FAIL byte = 2
+	LEAVE byte = 3
+	JOIN_REQ byte = 4
+	MISC byte = 5
+)
+
 type node_id_t struct{
 	timestamp int
 	IPV4_addr net.IP
@@ -70,4 +79,8 @@ func gen_node_id() node_id_t{
         }
     }
     return node_id_t{timestamp, currentIP}
+}
+
+func gen_msg(msg_type byte, timestamp int, node_id node_id_t, node_hash byte) msg_t{
+	return msg_t{msg_type, timestamp, node_id, node_hash}
 }
