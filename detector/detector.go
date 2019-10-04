@@ -1,12 +1,12 @@
 package detector
 import (
-		 // "time"
-		 // "fmt"
-   //       "net"
-   //       // "os"
+		 "time"
+		 "fmt"
+         "net"
+         // "os"
    //       "strings"
-		// // "fmt"
-		// "bytes"
+		 // // "fmt"
+		 // "bytes"
   //   	"os/exec"
   //   	"os"
 	 //    // "log"
@@ -38,7 +38,7 @@ import (
 
 type node_id_t struct{
 	timestamp int
-	IPV4_addr int
+	IPV4_addr net.IP
 }
 
 type msg_t struct{
@@ -48,28 +48,26 @@ type msg_t struct{
 	node_hash byte
 }
 
-// func gen_node_id() node_id_t{
-// 	fmt.Println("Generating a node address for %s\n", )
-// 	a := time.Now()
-// 	timestamp := a.Nanosecond()
+func gen_node_id() node_id_t{
+	fmt.Println("Generating a node address for %s\n", )
+	a := time.Now()
+	timestamp := a.Nanosecond()
 
-// 	addrs, err := net.InterfaceAddrs()
-//     if err != nil {
-//         fmt.Println(err)
-//     }
+	addrs, err := net.InterfaceAddrs()
+    if err != nil {
+        fmt.Println(err)
+    }
 
-//     var currentIP string //, currentNetworkHardwareName string
-
-//     for _, address := range addrs {
-//         // check the address type and if it is not a loopback the display it
-//         // = GET LOCAL IP ADDRESS
-//         if ipnet, ok := address.(*net.IPNet); ok && !ipnet.IP.IsLoopback() {
-//             if ipnet.IP.To4() != nil {
-//                     fmt.Println("Current IP address : ", ipnet.IP.String())
-//                     currentIP = ipnet.IP.String()
-//             }
-//         }
-//     }
-//     return node_id_t()
-
-// }
+    var currentIP net.IP //, currentNetworkHardwareName string
+    for _, address := range addrs {
+        // check the address type and if it is not a loopback the display it
+        // = GET LOCAL IP ADDRESS
+        if ipnet, ok := address.(*net.IPNet); ok && !ipnet.IP.IsLoopback() {
+            if ipnet.IP.To4() != nil {
+                    fmt.Println("Current IP address : ", ipnet.IP.String())
+                    currentIP = ipnet.IP//.String()
+            }
+        }
+    }
+    return node_id_t{timestamp, currentIP}
+}
