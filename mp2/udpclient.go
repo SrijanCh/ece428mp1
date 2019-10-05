@@ -8,9 +8,15 @@ package main
 
  func main() {
          hostName := "localhost"
+         // hostName := "srijanc2@fa19-cs425-g77-06.cs.illinois.edu"
+         // hostName := "172.22.153.5"
          portNum := "6000"
          service := hostName + ":" + portNum
          RemoteAddr, err := net.ResolveUDPAddr("udp", service)
+
+         if err != nil {
+                 log.Fatal(err)
+         }
 
          //LocalAddr := nil
          // see https://golang.org/pkg/net/#DialUDP
@@ -39,6 +45,7 @@ package main
                  log.Println(err)
          }
 
+         log.Printf("Wrote that shit, waiting for response back.\n")
          // receive message from server
          buffer := make([]byte, 1024)
          n, addr, err := conn.ReadFromUDP(buffer)
