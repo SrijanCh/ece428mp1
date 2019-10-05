@@ -13,10 +13,26 @@ type Memtable struct{
 	hash_list []int
 }
 
-// type BeatTable struct{
-// 	list map
-// }
 
+func NewMemtable() Memtable{
+	var a sync.Mutex 
+	b := make(map[int]detector.Node_id_t)
+	c := make([]int, 0)
+	return Memtable{a, b, c}
+}
+
+func (t *Memtable) Init(node_hash int, node_id detector.Node_id_t) {
+	//Grab lock 
+	t.mu.Lock()
+	//Add to map
+	t.table[node_hash] = node_id;
+	//Append key to slice
+	t.hash_list = append(t.hash_list, node_hash)
+	//Sort the slice
+	sort.Ints(t.hash_list);
+	//Release lock
+	t.mu.Unlock()
+}
 
 func (t *Memtable) Add_node(node_hash int, node_id detector.Node_id_t) {
 	//Grab lock 
@@ -118,4 +134,29 @@ func (t *Memtable) Get_neighbors(node_hash int) [4]int{
 	//Release lock
 	t.mu.Unlock()
 	return ret
+}
+
+
+func (t *Memtable) Get_num_nodes() int{
+	a := -1
+	t.mu.Lock()
+	a = len(t.table)
+	t.mu.Unlock()
+	return a
+}
+
+func (t* Memtable) Get_avail_hash() int{
+	t.mu.Lock()
+	i := 0
+	for ; i < len(t.hash_list) && t.hash_list[i] == i; i++ {
+			//Just do that
+	} 
+	t.mu.Unlock()
+
+	if(i == len(t.hash_list)){
+		return -1
+	}else{
+		return i
+	}
+
 }
