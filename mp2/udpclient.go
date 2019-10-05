@@ -4,6 +4,9 @@ package main
          "log"
          "net"
          "fmt"
+         "time"
+         "encoding/json"
+         "detector"
  )
 
  func main() {
@@ -35,9 +38,11 @@ package main
          log.Printf("Local UDP client address : %s \n", conn.LocalAddr().String())
 
          defer conn.Close()
-
+         t := time.Now().UnixNano()
+         message := &msg{JOIN, t, 0, 100}
+         s, _ :=  json.Marshal(message)
          // write a message to server
-         message := []byte("Hello UDP server!")
+         message := []byte(string(s))
 
          _, err = conn.Write(message)
 
