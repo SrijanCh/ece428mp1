@@ -9,6 +9,16 @@ package main
          "detector"
  )
 
+
+const(
+	HEARTBEAT byte = 0
+	JOIN byte = 1
+	FAIL byte = 2
+	LEAVE byte = 3
+	JOIN_REQ byte = 4
+	MISC byte = 5
+)
+
  func main() {
          hostName := "localhost"
          portNum := "6000"
@@ -33,7 +43,7 @@ package main
 
          defer conn.Close()
          t := time.Now().UnixNano()
-         message := &msg{JOIN, t, 0, 100}
+         message := &detector.Msg_t{JOIN, t, 0, 100}
          s, _ :=  json.Marshal(message)
          // write a message to server
          message := []byte(string(s))

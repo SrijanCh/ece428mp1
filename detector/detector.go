@@ -36,16 +36,25 @@ import (
 // 	return nil
 // }
 
-type node_id_t struct{
-	timestamp int
+const(
+	HEARTBEAT byte = 0
+	JOIN byte = 1
+	FAIL byte = 2
+	LEAVE byte = 3
+	JOIN_REQ byte = 4
+	MISC byte = 5
+)
+
+type Node_id_t struct{
+	Timestamp int
 	IPV4_addr int
 }
 
-type msg_t struct{
-	msg_type byte
-	timestamp int
-	node_id node_id_t
-	node_hash byte
+type Msg_t struct{
+	Msg_type byte
+	Timestamp int
+	Node_id Node_id_t
+	Node_hash byte
 }
 
 // func gen_node_id() node_id_t{
