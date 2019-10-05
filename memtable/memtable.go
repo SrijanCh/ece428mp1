@@ -21,28 +21,21 @@ func NewMemtable() Memtable{
 	return Memtable{a, b, c}
 }
 
-func (t *Memtable) Init(node_hash int, node_id detector.Node_id_t) {
-	//Grab lock 
-	t.mu.Lock()
-	//Add to map
-	t.table[node_hash] = node_id;
-	//Append key to slice
-	t.hash_list = append(t.hash_list, node_hash)
-	//Sort the slice
-	sort.Ints(t.hash_list);
-	//Release lock
-	t.mu.Unlock()
-}
-
 func (t *Memtable) Add_node(node_hash int, node_id detector.Node_id_t) {
 	//Grab lock 
 	t.mu.Lock()
-	//Add to map
-	t.table[node_hash] = node_id;
-	//Append key to slice
-	t.hash_list = append(t.hash_list, node_hash)
-	//Sort the slice
-	sort.Ints(t.hash_list);
+	//Check if key exists
+	if val, ok := t.table[node_hash]; !ok { //Node is not in there
+		//Add to map
+		t.table[node_hash] = node_id;
+		//Append key to slice
+		t.hash_list = append(t.hash_list, node_hash)
+		//Sort the slice
+		sort.Ints(t.hash_list);
+	} else{
+		t.table[node_hash] = val //Fucking Go not allowing unused shit
+	}
+
 	//Release lock
 	t.mu.Unlock()
 }
@@ -51,17 +44,21 @@ func (t *Memtable) Delete_node(node_hash int, node_id detector.Node_id_t) {
 	//Grab lock 
 	t.mu.Lock()
 
-	//Delete from map
-	delete(t.table, node_hash)
-	//Find key in list, delete key by switching with last element, then re-sort
-	i := 0
-	for ; i < len(t.hash_list) && t.hash_list[i] != node_hash; i++ {
-		// i++
-	} 
-	if i != len(t.hash_list){
-    	t.hash_list[len(t.hash_list)-1], t.hash_list[i] = t.hash_list[i], t.hash_list[len(t.hash_list)-1]
-    	t.hash_list = t.hash_list[:len(t.hash_list)-1]
-		sort.Ints(t.hash_list);
+	if val, ok := t.table[node_hash]; !ok { //Node is not in there
+		//Delete from map
+		delete(t.table, node_hash)
+		//Find key in list, delete key by switching with last element, then re-sort
+		i := 0
+		for ; i < len(t.hash_list) && t.hash_list[i] != node_hash; i++ {
+			// i++
+		} 
+		if i != len(t.hash_list){
+    		t.hash_list[len(t.hash_list)-1], t.hash_list[i] = t.hash_list[i], t.hash_list[len(t.hash_list)-1]
+    		t.hash_list = t.hash_list[:len(t.hash_list)-1]
+			sort.Ints(t.hash_list);
+		} else{
+			t.table[node_hash] = val //Fucking Go not allowing unused shit
+		}
 	}
 
 	//Release lock
@@ -69,7 +66,7 @@ func (t *Memtable) Delete_node(node_hash int, node_id detector.Node_id_t) {
 }
 
 
-func (t *Memtable) Get_node_id(node_hash int) detector.Node_id_t{
+func (t *Memtable) Get_node(node_hash int) detector.Node_id_t{
 	//Grab lock 
 	// var a detector.Node_id_t = nil
 	t.mu.Lock()
