@@ -53,11 +53,11 @@ type Node_id_t struct{
 type Msg_t struct{
 	Msg_type byte
 	Timestamp int
-	Node_id node_id_t
+	Node_id Node_id_t
 	Node_hash byte
 }
 
-func Gen_node_id() node_id_t{
+func Gen_node_id() Node_id_t{
 	fmt.Println("Generating a node address for %s\n", )
 	a := time.Now()
 	timestamp := a.Nanosecond()
