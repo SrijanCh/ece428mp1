@@ -78,9 +78,9 @@ func Gen_node_id() Node_id_t{
             }
         }
     }
-    return node_id_t{timestamp, currentIP}
+    return Node_id_t{timestamp, currentIP}
 }
 
-func Gen_msg(msg_type byte, timestamp int, node_id node_id_t, node_hash byte) msg_t{
-	return msg_t{msg_type, timestamp, node_id, node_hash}
+func Gen_msg(msg_type byte, timestamp int, node_id Node_id_t, node_hash byte) Msg_t{
+	return Msg_t{msg_type, timestamp, node_id, node_hash}
 }
