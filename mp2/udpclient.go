@@ -8,7 +8,7 @@ package main
          "encoding/json"
          "detector"
  )
-
+ 
  func main() {
          hostName := "localhost"
          // hostName := "srijanc2@fa19-cs425-g77-06.cs.illinois.edu"
@@ -39,8 +39,8 @@ package main
 
          defer conn.Close()
          t := time.Now().UnixNano()
-         message := &msg{JOIN, t, 0, 100}
-         s, _ :=  json.Marshal(message)
+         msg := &detector.Msg_t{detector.JOIN, t, detector.Gen_node_id(), 100}
+         s, _ :=  json.Marshal(msg)
          // write a message to server
          message := []byte(string(s))
 
