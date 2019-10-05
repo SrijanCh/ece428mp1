@@ -45,19 +45,19 @@ const(
 	MISC byte = 5
 )
 
-type node_id_t struct{
-	timestamp int
+type Node_id_t struct{
+	Timestamp int
 	IPV4_addr net.IP
 }
 
-type msg_t struct{
-	msg_type byte
-	timestamp int
-	node_id node_id_t
-	node_hash byte
+type Msg_t struct{
+	Msg_type byte
+	Timestamp int
+	Node_id node_id_t
+	Node_hash byte
 }
 
-func gen_node_id() node_id_t{
+func Gen_node_id() node_id_t{
 	fmt.Println("Generating a node address for %s\n", )
 	a := time.Now()
 	timestamp := a.Nanosecond()
@@ -81,6 +81,6 @@ func gen_node_id() node_id_t{
     return node_id_t{timestamp, currentIP}
 }
 
-func gen_msg(msg_type byte, timestamp int, node_id node_id_t, node_hash byte) msg_t{
+func Gen_msg(msg_type byte, timestamp int, node_id node_id_t, node_hash byte) msg_t{
 	return msg_t{msg_type, timestamp, node_id, node_hash}
 }
