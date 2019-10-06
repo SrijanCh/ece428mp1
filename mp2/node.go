@@ -422,7 +422,7 @@ func init_() {
 func join_cluster(node_id detector.Node_id_t) IntroMsg{
     //Start up a server to receive back response
     a := 0
-    hostName := "localhost"
+    hostName := my_node_id.IPV4_addr.String()
     service := hostName + ":" + portNum
     fmt.Printf("Introducer listening server, at service %s\n", service)
     udpAddr, err := net.ResolveUDPAddr("udp4", service)
