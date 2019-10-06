@@ -152,8 +152,8 @@ func sendmessageintroducer(msg_struct detector.Msg_t, portNum string) {
 func sendintroinfo(node_hash int, pass_mem_table memtable.Memtable, addr *net.UDPAddr){
 
     (*addr).Port = portNumber
-    fmt.Printf("Got to sendintroinfo, sending hash %d and memtable below to %s\n", (*addr).String())
-    fmt.Printf(mem_table.String())
+    fmt.Printf("Got to sendintroinfo, sending hash %d and memtable below to %s\n", node_hash, (*addr).String())
+    fmt.Printf("%s", mem_table.String())
     msg_struct := IntroMsg{node_hash, pass_mem_table}
     msg, err := json.Marshal(msg_struct)
     if err != nil {
