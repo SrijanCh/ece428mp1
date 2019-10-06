@@ -110,7 +110,7 @@ func handlejoinreqmsg(msg detector.Msg_t, addr *net.UDPAddr) {
             sendmessage(mesg, neighbor_id.IPV4_addr, portNum)
         }
     } else {
-        log .Fatal("Only introducer should receive JOIN_REQUESTS. Ignoring")
+        // log .Fatal("Only introducer should receive JOIN_REQUESTS. Ignoring")
     }
 }
 
@@ -290,7 +290,7 @@ func listener() {
         return
         // log.Fatal(err)
     }
-    fmt.Printf("UDP server up and listening on port " + portNum)
+    fmt.Printf("UDP server up and listening on port " + portNum + "\n")
     mylog.Log_writeln("UDP server up and listening on port " + portNum)
     defer ln.Close()
     for {
@@ -489,7 +489,7 @@ func heartbeatsend() {
 
 func main() {
     mylog.Log_init()
-    // init_()
+    init_()
     go listener()
     go heartbeatsend()
     go monitor()
