@@ -4,6 +4,7 @@ import(
 	"sync"
 	"detector"
 	"sort"
+	"strconv"
 )
 
 type Memtable struct{
@@ -12,6 +13,40 @@ type Memtable struct{
 	Hash_list []int
 }
 
+
+type FakeMemtable struct{
+	Mu sync.Mutex
+	Table map[string]detector.Node_id_t
+	Hash_list []int
+}
+
+func (t *Memtable) RealToFake() FakeMemtable{
+	fake := FakeMemtable{}
+	t.Mu.Lock()
+	for k, _ := range t.Table{
+		fake.Table[fmt.Sprintf("%d", k)] = t.Table[k]
+	}
+	for k, _ := range t.Table{
+		fake.Table[fmt.Sprintf("%d", k)] = t.Table[k]
+	}
+	fake.Hash_list = t.Hash_list
+	t.Mu.Unlock()
+	return fake
+}
+
+
+func FakeToReal(fake FakeMemtable) Memtable{
+	t := Memtable{}
+	t.Mu.Lock()
+	for k, _ := range fake.Table{
+		var a64 int64 = 0
+		a64, _ = strconv.ParseInt(k, 10, 32)
+		t.Table[int(a64)] = fake.Table[k]
+	}
+	t.Hash_list = fake.Hash_list
+	t.Mu.Unlock()
+	return t
+}
 
 func NewMemtable() Memtable{
 	var a sync.Mutex 

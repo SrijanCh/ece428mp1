@@ -17,7 +17,7 @@ import (
 
 type IntroMsg struct{
     node_hash int
-    table memtable.Memtable
+    table memtable.FakeMemtable
 }
 
 var isintroducer = false;
@@ -81,7 +81,7 @@ func unmarshalmsg(buf []byte) detector.Msg_t{
         fmt.Printf("%s\n", err.Error())
         // log.Fatal(err)
         // return nil
-            
+
     }
     return msg
 }
@@ -155,7 +155,7 @@ func sendintroinfo(node_hash int, pass_mem_table memtable.Memtable, addr *net.UD
     (*addr).Port = portNumber
     fmt.Printf("Got to sendintroinfo, sending hash %d and memtable below to %s\n", node_hash, (*addr).String())
     fmt.Printf("%s", mem_table.String())
-    msg_struct := IntroMsg{node_hash, pass_mem_table}
+    msg_struct := IntroMsg{node_hash, pass_mem_table.RealToFake()}
     msg, err := json.Marshal(msg_struct)
     if err != nil {
         fmt.Printf("%s\n", err.Error())
@@ -412,7 +412,7 @@ func init_() {
     } else {
         intro_info := join_cluster(my_node_id)
         my_node_hash = intro_info.node_hash
-        mem_table = intro_info.table
+        mem_table = memtable.FakeToReal(intro_info.table)
         neigh = beatable.Reval_table(my_node_hash, mem_table)   
     }       
     fmt.Printf("Our node is initialized! This node is hashed to %d with node_id %s:%d.\n", my_node_hash, my_node_id.IPV4_addr.String(), my_node_id.Timestamp)
