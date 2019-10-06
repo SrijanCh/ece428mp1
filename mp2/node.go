@@ -34,6 +34,7 @@ var beatable beat_table.Beat_table = beat_table.NewBeatTable()
 var neigh [4]int = [4]int{-1,-1,-1,-1}
 
 const portNum = "6000"
+const portNumber = 6000
 const introducer_hash = 0
 const introducer_ip =  "172.22.154.255" // CHANGE LATER
 const time_to_live = 4
@@ -150,6 +151,7 @@ func sendmessageintroducer(msg_struct detector.Msg_t, portNum string) {
 
 func sendintroinfo(node_hash int, pass_mem_table memtable.Memtable, addr *net.UDPAddr){
 
+    (*addr).Port = portNumber
     fmt.Printf("Got to sendintroinfo, sending to %s\n", (*addr).String())
     msg_struct := IntroMsg{node_hash, pass_mem_table}
     msg, err := json.Marshal(msg_struct)
