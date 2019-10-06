@@ -424,6 +424,7 @@ func join_cluster(node_id detector.Node_id_t) IntroMsg{
     a := 0
     hostName := "localhost"
     service := hostName + ":" + portNum
+    fmt.Printf("Introducer listening server, at service %s\n", service)
     udpAddr, err := net.ResolveUDPAddr("udp4", service)
     if err != nil {
         mylog.Log_writeln("[join_cluster] Failed to resolve UDP address")
