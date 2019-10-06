@@ -154,11 +154,11 @@ func (t* Memtable) Get_avail_hash() int{
 	} 
 	t.mu.Unlock()
 
-	if(i == len(t.hash_list)){
-		return -1
-	}else{
+	// if(i == len(t.hash_list)){
+	// 	return -1
+	// }else{
 		return i
-	}
+	// }
 
 }
 
