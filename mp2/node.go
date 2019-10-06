@@ -445,6 +445,7 @@ func monitor(){
         for i:=0; i < len(neigh); i++{
             a := beatable.Get_beat(neigh[i])
             if stamps[i] == a{
+                fmt.Printf("______________beats match for %d, as %d == %d________________.\n", i, stamps[i], a)
                 fails = append(fails, neigh[i])
             }else{
                 stamps[i] = a
