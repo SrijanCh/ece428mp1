@@ -30,6 +30,10 @@ func (t *Beat_table) Check_num() int{
 }
 
 func (t *Beat_table) Log_beat(node_hash int, timestamp int64){
+	if timestamp == 0{
+		fmt.Printf("LOGGING A TIMESTAMP OF ZERO\n")
+	}
+
 	t.mu.Lock()
 
 	if _, ok := t.table[node_hash]; ok { //Node is in there

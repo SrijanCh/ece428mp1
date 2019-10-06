@@ -280,7 +280,8 @@ func handlejoinmsg(msg detector.Msg_t) {
 
 //TODO
 func handleheartbeatmsg(msg detector.Msg_t) {
-    fmt.Printf("Heartbeat from %s_%d at %d received (current neigh is %v).\n", msg.Node_id.IPV4_addr, msg.Node_id.Timestamp, msg.Node_hash, neigh)
+    fmt.Printf("Heartbeat from %s_%d at %d with Timestamp %d received (our current neigh is %v).\n", msg.Node_id.IPV4_addr, 
+                                                    msg.Node_id.Timestamp, msg.Node_hash, msg.Timestamp, neigh)
     beatable.Log_beat(int(msg.Node_hash), msg.Timestamp)
     // fmt.Printf("Membership table:\n %s.\n", mem_table.String())
 }
@@ -445,7 +446,7 @@ func monitor(){
         for i:=0; i < len(neigh); i++{
             a := beatable.Get_beat(neigh[i])
             if stamps[i] == a{
-                fmt.Printf("______________beats match for %d, as %d == %d________________.\n", i, stamps[i], a)
+                fmt.Printf("______________beats match for %d, as %d == %d________________.\n", neigh[i], stamps[i], a)
                 fails = append(fails, neigh[i])
             }else{
                 stamps[i] = a
