@@ -405,6 +405,8 @@ func init_() {
         fmt.Print("We are the introducer\n")
         isintroducer = true
         my_node_hash = introducer_hash
+        mem_table.Add_node(my_node_hash, my_node_id)
+        neigh = beatable.Reval_table(my_node_hash, mem_table)  
     } else {
         intro_info := join_cluster(my_node_id)
         my_node_hash = intro_info.node_hash
