@@ -96,6 +96,7 @@ func handlejoinreqmsg(msg detector.Msg_t, addr *net.UDPAddr) {
         // neigh := mem_table.Get_neigh(introducer_hash)
 
         // add the node to the introducers table
+        sell_crack()
         mem_table.Add_node(hash, msg.Node_id)
         neigh = beatable.Reval_table(my_node_hash, mem_table)
         fmt.Printf("Membership table:\n %s.\n", mem_table.String())
@@ -235,6 +236,7 @@ func handlejoinmsg(msg detector.Msg_t) {
         fmt.Printf("First time seen; handling...\n")  
 
         // add the node to the table
+        sell_crack()
         mem_table.Add_node(int(msg.Node_hash), msg.Node_id)
         neigh = beatable.Reval_table(my_node_hash, mem_table)
         fmt.Printf("New membership table:\n %s.\n", mem_table.String())
@@ -291,6 +293,7 @@ func handlefailmsg(msg detector.Msg_t) {
     if !exists {
         fmt.Printf("First time seen; handling...\n")  
         
+        sell_crack()
         mem_table.Delete_node(int(msg.Node_hash), msg.Node_id)
         neigh = beatable.Reval_table(my_node_hash, mem_table)
         fmt.Printf("New membership table:\n %s.\n", mem_table.String())
@@ -331,6 +334,7 @@ func handleleavemsg(msg detector.Msg_t) {
     if !exists {
         fmt.Printf("First time seen; handling...\n")  
 
+        sell_crack()
         // delete the node from table
         mem_table.Delete_node(int(msg.Node_hash), msg.Node_id)
         neigh = beatable.Reval_table(my_node_hash, mem_table)
@@ -458,6 +462,8 @@ func declare_fail(node_hash int){
 
     // delete the node from table
     a := mem_table.Get_node(node_hash)
+
+    sell_crack()
     mem_table.Delete_node(int(node_hash), mem_table.Get_node(node_hash))
     neigh = beatable.Reval_table(my_node_hash, mem_table)
     fmt.Printf("New membership table:\n %s.\n", mem_table.String())
@@ -600,6 +606,21 @@ func heartbeatsend() {
             }
             time.Sleep(HEARTBEAT_INTERVAL_MILLIS * time.Millisecond)
         }
+}
+
+func sell_crack(){
+            if neigh[0] == -1 || neigh[1] == -1 || neigh[2] == -1 || neigh[3] == -1{
+                fmt.Printf("sell_crack: Can't get neigh\n")
+                return
+            }
+            mylog.Log_writeln("Sending indep heartbeat") 
+            fmt.Printf("Sending heartbeat (current neighbors list is %v)\n", neigh) 
+            for i := 0; i < len(neigh); i++ {
+                neighbor_id := mem_table.Get_node(neigh[i])
+                // Node id is generated in the msg
+                mesg := detector.Msg_t{detector.HEARTBEAT, time.Now().UnixNano(), my_node_id, time_to_live, byte(my_node_hash)}
+                sendmessage(mesg, neighbor_id.IPV4_addr, portNum)
+            }
 }
 
 func main() {

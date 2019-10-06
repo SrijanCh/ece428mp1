@@ -35,7 +35,7 @@ func (t *Beat_table) Log_beat(node_hash int, timestamp int64){
 	if _, ok := t.table[node_hash]; ok { //Node is in there
 		t.table[node_hash] = timestamp
 	}else{
-		fmt.Printf("Just tried to log heartbeat someone not in table")
+		fmt.Printf("Just tried to log heartbeat someone not in table (%d)\n", node_hash)
 	}
 
 	t.mu.Unlock()
