@@ -291,7 +291,7 @@ func listener() {
         return
         // log.Fatal(err)
     }
-    fmt.Printf("UDP server up and listening on port " + portNum + "\n")
+    fmt.Printf("UDP server up and listening on addr " + hostName + ", port " + portNum + "\n")
     mylog.Log_writeln("UDP server up and listening on port " + portNum)
     defer ln.Close()
     for {
