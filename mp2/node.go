@@ -115,7 +115,7 @@ func handlejoinreqmsg(msg detector.Msg_t, addr *net.UDPAddr) {
         //     return
         // }
         // send a join message to 2 previous and next nodes
-        for i := 0; i <= len(neigh); i++ {
+        for i := 0; i < len(neigh); i++ {
             neighbor_id := mem_table.Get_node(neigh[i])
             // Node id is generated in the msg
             mesg := detector.Msg_t{detector.JOIN, time.Now().UnixNano(), msg.Node_id, time_to_live, byte(hash)}
@@ -253,7 +253,7 @@ func handlejoinmsg(msg detector.Msg_t) {
         msg.Time_to_live -= 1
 
         // neigh := mem_table.Get_neigh(my_node_hash)
-        for i := 0; i <= len(neigh); i++ {
+        for i := 0; i < len(neigh); i++ {
             neighbor_id := mem_table.Get_node(neigh[i])
             sendmessage(msg, neighbor_id.IPV4_addr, portNum)
         }
@@ -336,7 +336,7 @@ func handleleavemsg(msg detector.Msg_t) {
         msg.Time_to_live -= 1
 
         // neigh := mem_table.Get_neigh(my_node_hash)
-        for i := 0; i <= len(neigh); i++ {
+        for i := 0; i < len(neigh); i++ {
             neighbor_id := mem_table.Get_node(neigh[i])
             sendmessage(msg, neighbor_id.IPV4_addr, portNum)
         }
@@ -450,7 +450,7 @@ func declare_fail(node_hash int){
     }
 
     // neigh := mem_table.Get_neigh(my_node_hash)
-    for i := 0; i <= len(neigh); i++ {
+    for i := 0; i < len(neigh); i++ {
             neighbor_id := mem_table.Get_node(neigh[i])
             sendmessage(msg, neighbor_id.IPV4_addr, portNum)
     }
@@ -563,7 +563,7 @@ func heartbeatsend() {
             }
 
             mylog.Log_writeln("Sending heartbeat") 
-            for i := 0; i <= len(neigh); i++ {
+            for i := 0; i < len(neigh); i++ {
                 neighbor_id := mem_table.Get_node(neigh[i])
                 // Node id is generated in the msg
                 mesg := detector.Msg_t{detector.HEARTBEAT, time.Now().UnixNano(), my_node_id, time_to_live, byte(my_node_hash)}
