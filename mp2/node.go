@@ -100,9 +100,20 @@ func handlejoinreqmsg(msg detector.Msg_t, addr *net.UDPAddr) {
         sendintroinfo(hash, mem_table, addr)
 
         if neigh[0] == -1 || neigh[1] == -1 || neigh[2] == -1 || neigh[3] == -1{
-            // fmt.Printf("Can't get neigh\n")
+            // No neighbors, so just tell everybody
+            a := mem_table.Get_Hash_list()
+            for i := 0; i <= len(a); i++ {
+                neighbor_id := mem_table.Get_node(a[i])
+                sendmessage(msg, neighbor_id.IPV4_addr, portNum)
+            }
+
             return
         }
+
+        // if neigh[0] == -1 || neigh[1] == -1 || neigh[2] == -1 || neigh[3] == -1{
+        //     // fmt.Printf("Can't get neigh\n")
+        //     return
+        // }
         // send a join message to 2 previous and next nodes
         for i := 0; i <= len(neigh); i++ {
             neighbor_id := mem_table.Get_node(neigh[i])
@@ -214,14 +225,26 @@ func handlejoinmsg(msg detector.Msg_t) {
         mem_table.Add_node(int(msg.Node_hash), msg.Node_id)
         neigh = beatable.Reval_table(my_node_hash, mem_table)
         
-        if neigh[0] == -1 || neigh[1] == -1 || neigh[2] == -1 || neigh[3] == -1{
-            fmt.Printf("Can't get neigh\n")
-            return
-        }
+        // if neigh[0] == -1 || neigh[1] == -1 || neigh[2] == -1 || neigh[3] == -1{
+        //     fmt.Printf("Can't get neigh\n")
+        //     return
+        // }
 
 
         // add it to the map, and then process it
         addtomessagehashes(hash_msg)
+
+
+        if neigh[0] == -1 || neigh[1] == -1 || neigh[2] == -1 || neigh[3] == -1{
+            // No neighbors, so just tell everybody
+            a := mem_table.Get_Hash_list()
+            for i := 0; i <= len(a); i++ {
+                neighbor_id := mem_table.Get_node(a[i])
+                sendmessage(msg, neighbor_id.IPV4_addr, portNum)
+            }
+            return
+        }
+
         // dont continue to send if no more jumps left
         if msg.Time_to_live <= 0 {
             return
@@ -255,6 +278,17 @@ func handlefailmsg(msg detector.Msg_t) {
         
         addtomessagehashes(hash_msg)
 
+        if neigh[0] == -1 || neigh[1] == -1 || neigh[2] == -1 || neigh[3] == -1{
+            // No neighbors, so just tell everybody
+            a := mem_table.Get_Hash_list()
+            for i := 0; i <= len(a); i++ {
+                neighbor_id := mem_table.Get_node(a[i])
+                sendmessage(msg, neighbor_id.IPV4_addr, portNum)
+            }
+            return
+        }
+
+
         if msg.Time_to_live <= 0 {
             return
         }
@@ -278,13 +312,22 @@ func handleleavemsg(msg detector.Msg_t) {
         mem_table.Delete_node(int(msg.Node_hash), msg.Node_id)
         neigh = beatable.Reval_table(my_node_hash, mem_table)
         
+        // if neigh[0] == -1 || neigh[1] == -1 || neigh[2] == -1 || neigh[3] == -1{
+        //     fmt.Printf("Can't get neigh\n")
+        //     return
+        // }
+        addtomessagehashes(hash_msg)
         if neigh[0] == -1 || neigh[1] == -1 || neigh[2] == -1 || neigh[3] == -1{
-            fmt.Printf("Can't get neigh\n")
+            // No neighbors, so just tell everybody
+            a := mem_table.Get_Hash_list()
+            for i := 0; i <= len(a); i++ {
+                neighbor_id := mem_table.Get_node(a[i])
+                sendmessage(msg, neighbor_id.IPV4_addr, portNum)
+            }
+
             return
         }
 
-
-        addtomessagehashes(hash_msg)
 
         if msg.Time_to_live <= 0 {
             return
