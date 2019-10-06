@@ -390,13 +390,21 @@ func declare_fail(node_hash int){
     mem_table.Delete_node(int(node_hash), mem_table.Get_node(node_hash))
     neigh = beatable.Reval_table(my_node_hash, mem_table)
         
-        if neigh[0] == -1 || neigh[1] == -1 || neigh[2] == -1 || neigh[3] == -1{
-            // fmt.Printf("Can't get neigh\n")
-            return
-        }
+    
 
 
     msg := detector.Msg_t{detector.FAIL, time.Now().UnixNano(), a, byte(time_to_live), byte(node_hash)}
+
+    if neigh[0] == -1 || neigh[1] == -1 || neigh[2] == -1 || neigh[3] == -1{
+            // No neighbors, so just tell everybody
+            a := mem_table.Get_Hash_list()
+            for i := 0; i <= len(a); i++ {
+                neighbor_id := mem_table.Get_node(a[i])
+                sendmessage(msg, neighbor_id.IPV4_addr, portNum)
+            }
+
+        return
+    }
 
     // neigh := mem_table.Get_neigh(my_node_hash)
     for i := 0; i <= len(neigh); i++ {

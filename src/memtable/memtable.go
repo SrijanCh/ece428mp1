@@ -20,6 +20,8 @@ type FakeMemtable struct{
 	Hash_list []int
 }
 
+
+
 func (t *Memtable) RealToFake() FakeMemtable{
 	fake := FakeMemtable{}
 	fake.Table = make(map[string]detector.Node_id_t)
@@ -154,12 +156,12 @@ func (t *Memtable) Get_neighbors(node_hash int) [4]int{
 		ret[2] = t.Hash_list[i+1]
 		ret[3] = t.Hash_list[0]
 	}else if(i == 0){ //Wraparound (first)
-		ret[0] = t.Hash_list[len(t.Hash_list)-1]
-		ret[1] = t.Hash_list[len(t.Hash_list)]
+		ret[0] = t.Hash_list[len(t.Hash_list)-2]
+		ret[1] = t.Hash_list[len(t.Hash_list)-1]
 		ret[2] = t.Hash_list[i+1]
 		ret[3] = t.Hash_list[i+2]
 	}else if(i == 1){ //Wraparound {second}
-		ret[0] = t.Hash_list[len(t.Hash_list)]
+		ret[0] = t.Hash_list[len(t.Hash_list)-1]
 		ret[1] = t.Hash_list[i-1]
 		ret[2] = t.Hash_list[i+1]
 		ret[3] = t.Hash_list[i+2]
@@ -172,6 +174,30 @@ func (t *Memtable) Get_neighbors(node_hash int) [4]int{
 	//Release lock
 	t.Mu.Unlock()
 	return ret
+}
+
+
+func (t *Memtable) Get_Hash_list() []int{
+	//Grab lock
+
+	// fmt.Printf("Get_neighbors\n")
+
+	t.Mu.Lock()
+	defer t.Mu.Unlock()
+
+	// if(len(t.Hash_list) < 5){ //Not supposed to be functional cluster without 5 nodes
+	// 	// fmt.Printf("Fuck this shit, %d, %d, %d, %d\n", ret[0], ret[1], ret[2], ret[3] )
+	// 	t.Mu.Unlock()
+	// 	return ret
+	// }
+
+	// i := 0
+	// for ; i < len(t.Hash_list) && t.Hash_list[i] != node_hash; i++ {
+	// 	// i++
+	// } 
+	// //Release lock
+	// t.Mu.Unlock()
+	return t.Hash_list
 }
 
 
