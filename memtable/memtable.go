@@ -6,8 +6,6 @@ import(
 )
 
 type Memtable struct{
-	// mu_map sync.Mutex
-	// mu_list sync.Mutex
 	mu sync.Mutex
 	table map[int]detector.Node_id_t
 	hash_list []int

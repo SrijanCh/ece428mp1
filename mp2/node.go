@@ -10,15 +10,19 @@ import (
     "hash/fnv"
     "memtable"
     "bytes"
-    // "beat_table"
+    "beat_table"
 )
 var isintroducer = false;
 
-var node_id = ""
+var node_id detector.Node_id_t
 var node_hash = -1
 // Add mem table declaration here
 var message_hashes = make(map[int]int)
 var mem_table memtable.Memtable = memtable.NewMemtable()
+
+//Beat Table
+var beatable beat_table.Beat_table = beat_table.NewBeatTable()
+var neigh [4]int = [4]int{-1,-1,-1,-1}
 
 const portNum = "6000"
 const introducer_hash = 0
@@ -63,15 +67,16 @@ func unmarshalmsg(buf []byte) detector.Msg_t{
 func handlejoinreqmsg(msg detector.Msg_t) {
     if isintroducer {
         hash := mem_table.Get_avail_hash()
-        neighbors := mem_table.Get_neighbors(introducer_hash)
+        // neighbors := mem_table.Get_neighbors(introducer_hash)
 
         // add the node to the introducers table
         mem_table.Add_node(hash, msg.Node_id)
+        neigh = beatable.Reval_table(node_hash, mem_table)
 
         // send a join message to 2 previous and next nodes
         // TODO send this new node its membership list
-        for i := 0; i <= len(neighbors); i++ {
-            neighbor_id := mem_table.Get_node(neighbors[i])
+        for i := 0; i <= len(neigh); i++ {
+            neighbor_id := mem_table.Get_node(neigh[i])
             // Node id is generated in the msg
             mesg := detector.Msg_t{detector.JOIN, time.Now().UnixNano(), msg.Node_id, time_to_live, byte(hash)}
             sendmessage(mesg, neighbor_id.IPV4_addr, portNum)
@@ -96,6 +101,7 @@ func handlejoinmsg(msg detector.Msg_t) {
 
         // add the node to the table
         mem_table.Add_node(int(msg.Node_hash), msg.Node_id)
+        neigh = beatable.Reval_table(node_hash, mem_table)
 
         // add it to the map, and then process it
         message_hashes[hash_msg] = 0
@@ -130,6 +136,7 @@ func handleleavemsg(msg detector.Msg_t) {
 
         // delete the node from table
         mem_table.Delete_node(int(msg.Node_hash), msg.Node_id)
+        neigh = beatable.Reval_table(node_hash, mem_table)
 
         message_hashes[hash_msg] = 0
 
@@ -183,13 +190,13 @@ func listener() {
     for {
         buffer := make([]byte, 1024)
         // wait for UDP client to connect
-        _, _, err := conn.ReadFromUDP(buffer)
+        _, _, err := ln.ReadFromUDP(buffer)
 
         if err != nil {
             log.Fatal(err)
             continue
         }
-        go handleconnection(ln)
+        go handleconnection(buffer)
     }
 }
 

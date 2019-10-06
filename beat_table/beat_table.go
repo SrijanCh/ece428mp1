@@ -12,6 +12,15 @@ type Beat_table struct{
 	table map[int]int64
 }
 
+
+
+func NewBeatTable() Beat_table{
+	var a sync.Mutex 
+	b := make(map[int]int64)
+	return Beat_table{a, b}
+}
+
+
 func (t *Beat_table) Check_num() int{
 	a := -1
 	t.mu.Lock()
