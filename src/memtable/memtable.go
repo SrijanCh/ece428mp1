@@ -1,5 +1,6 @@
 package memtable
 import(
+	// "fmt"
 	"sync"
 	"detector"
 	"sort"
@@ -88,9 +89,12 @@ func (t *Memtable) Get_neighbors(node_hash int) [4]int{
 	ret[3] = -1
 	//Grab lock
 
+	// fmt.Printf("Get_neighbors\n")
+
 	t.mu.Lock()
 
 	if(len(t.hash_list) < 5){ //Not supposed to be functional cluster without 5 nodes
+		// fmt.Printf("Fuck this shit, %d, %d, %d, %d\n", ret[0], ret[1], ret[2], ret[3] )
 		t.mu.Unlock()
 		return ret
 	}
