@@ -147,18 +147,8 @@ func handleleavemsg(msg detector.Msg_t) {
     }
 }
 
-func handleconnection(conn *net.UDPConn) {
-    buffer := make([]byte, 1024)
-    // n, addr, err := conn.ReadFromUDP(buffer)
-    _, _, err := conn.ReadFromUDP(buffer)
-    if err != nil {
-        log.Fatal(err)
-    }
-
+func handleconnection(buffer []byte) {
     msg := unmarshalmsg(buffer)
-    // if msg == nil {
-        // return //nil
-    // }
 
     switch msg.Msg_type {
         case detector.HEARTBEAT:
@@ -191,7 +181,14 @@ func listener() {
     fmt.Println("UDP server up and listening on port " + portNum)
     defer ln.Close()
     for {
-    // wait for UDP client to connect
+        buffer := make([]byte, 1024)
+        // wait for UDP client to connect
+        _, _, err := conn.ReadFromUDP(buffer)
+
+        if err != nil {
+            log.Fatal(err)
+            continue
+        }
         go handleconnection(ln)
     }
 }
