@@ -23,8 +23,8 @@ type IntroMsg struct{
 
 var isintroducer = false;
 
-var node_id detector.Node_id_t
-var node_hash = -1
+var my_node_id detector.Node_id_t
+var my_node_hash = -1
 // Add mem table declaration here
 var message_hashes_mutex = &sync.Mutex{}
 var message_hashes = make(map[int]int64)
@@ -89,7 +89,7 @@ func handlejoinreqmsg(msg detector.Msg_t, addr *net.UDPAddr) {
 
         // add the node to the introducers table
         mem_table.Add_node(hash, msg.Node_id)
-        neigh = beatable.Reval_table(node_hash, mem_table)
+        neigh = beatable.Reval_table(my_node_hash, mem_table)
 
         // send this new node its hash_id and membership list
         sendintroinfo(hash, mem_table, addr)
@@ -157,7 +157,7 @@ func handlejoinmsg(msg detector.Msg_t) {
 
         // add the node to the table
         mem_table.Add_node(int(msg.Node_hash), msg.Node_id)
-        neigh = beatable.Reval_table(node_hash, mem_table)
+        neigh = beatable.Reval_table(my_node_hash, mem_table)
 
         // add it to the map, and then process it
         addtomessagehashes(hash_msg)
@@ -168,7 +168,7 @@ func handlejoinmsg(msg detector.Msg_t) {
 
         msg.Time_to_live -= 1
 
-        neighbors := mem_table.Get_neighbors(node_hash)
+        neighbors := mem_table.Get_neighbors(my_node_hash)
         for i := 0; i <= len(neighbors); i++ {
             neighbor_id := mem_table.Get_node(neighbors[i])
             sendmessage(msg, neighbor_id.IPV4_addr, portNum)
@@ -191,7 +191,7 @@ func handleleavemsg(msg detector.Msg_t) {
 
         // delete the node from table
         mem_table.Delete_node(int(msg.Node_hash), msg.Node_id)
-        neigh = beatable.Reval_table(node_hash, mem_table)
+        neigh = beatable.Reval_table(my_node_hash, mem_table)
 
         addtomessagehashes(hash_msg)
 
@@ -201,7 +201,7 @@ func handleleavemsg(msg detector.Msg_t) {
 
         msg.Time_to_live -= 1
 
-        neighbors := mem_table.Get_neighbors(node_hash)
+        neighbors := mem_table.Get_neighbors(my_node_hash)
         for i := 0; i <= len(neighbors); i++ {
             neighbor_id := mem_table.Get_node(neighbors[i])
             sendmessage(msg, neighbor_id.IPV4_addr, portNum)
@@ -262,15 +262,15 @@ func listener() {
 
 func init_() {
     mylog.Log_init()
-    node_id = detector.Gen_node_id()
-    if node_id.IPV4_addr.String() == introducer_ip {
+    my_node_id = detector.Gen_node_id()
+    if my_node_id.IPV4_addr.String() == introducer_ip {
         isintroducer = true
-        node_hash = introducer_hash
+        my_node_hash = introducer_hash
     } else {
-        intro_info := join_cluster(node_id)
-        node_hash = intro_info.node_hash
+        intro_info := join_cluster(my_node_id)
+        my_node_hash = intro_info.node_hash
         mem_table = intro_info.table
-        neigh = beatable.Reval_table(node_hash, mem_table)   
+        neigh = beatable.Reval_table(my_node_hash, mem_table)   
     }
 }
 
@@ -295,7 +295,7 @@ func join_cluster(node_id detector.Node_id_t) IntroMsg{
     for{
         fmt.Printf("Messaging Introducer . . .\n")
         //Message the introducer
-        msg_struct := detector.Msg_t{detector.JOIN_REQ, time.Now().UnixNano(), node_id, byte(time_to_live), byte(node_hash)}
+        msg_struct := detector.Msg_t{detector.JOIN_REQ, time.Now().UnixNano(), node_id, byte(time_to_live), byte(my_node_hash)}
         sendmessageintroducer(msg_struct, portNum)
         //Wait for reply
         //Set a deadline (play around with time to not duplicate message)
@@ -351,11 +351,11 @@ func sendmessageintroducer(msg_struct detector.Msg_t, portNum string) {
 
 func heartbeatsend() {
         for {
-            neigh = beatable.Reval_table(node_hash, mem_table)
+            neigh = beatable.Reval_table(my_node_hash, mem_table)
             for i := 0; i <= len(neigh); i++ {
                 neighbor_id := mem_table.Get_node(neigh[i])
                 // Node id is generated in the msg
-                mesg := detector.Msg_t{detector.HEARTBEAT, time.Now().UnixNano(), node_id, time_to_live, byte(node_hash)}
+                mesg := detector.Msg_t{detector.HEARTBEAT, time.Now().UnixNano(), my_node_id, time_to_live, byte(my_node_hash)}
                 sendmessage(mesg, neighbor_id.IPV4_addr, portNum)
             }
             time.Sleep(HEARTBEAT_INTERVAL_MILLIS * time.Millisecond)
