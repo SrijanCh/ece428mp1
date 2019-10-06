@@ -102,7 +102,7 @@ func handlejoinreqmsg(msg detector.Msg_t, addr *net.UDPAddr) {
         if neigh[0] == -1 || neigh[1] == -1 || neigh[2] == -1 || neigh[3] == -1{
             // No neighbors, so just tell everybody
             a := mem_table.Get_Hash_list()
-            for i := 0; i <= len(a); i++ {
+            for i := 0; i < len(a); i++ {
                 neighbor_id := mem_table.Get_node(a[i])
                 sendmessage(msg, neighbor_id.IPV4_addr, portNum)
             }
@@ -238,7 +238,7 @@ func handlejoinmsg(msg detector.Msg_t) {
         if neigh[0] == -1 || neigh[1] == -1 || neigh[2] == -1 || neigh[3] == -1{
             // No neighbors, so just tell everybody
             a := mem_table.Get_Hash_list()
-            for i := 0; i <= len(a); i++ {
+            for i := 0; i < len(a); i++ {
                 neighbor_id := mem_table.Get_node(a[i])
                 sendmessage(msg, neighbor_id.IPV4_addr, portNum)
             }
@@ -281,7 +281,7 @@ func handlefailmsg(msg detector.Msg_t) {
         if neigh[0] == -1 || neigh[1] == -1 || neigh[2] == -1 || neigh[3] == -1{
             // No neighbors, so just tell everybody
             a := mem_table.Get_Hash_list()
-            for i := 0; i <= len(a); i++ {
+            for i := 0; i < len(a); i++ {
                 neighbor_id := mem_table.Get_node(a[i])
                 sendmessage(msg, neighbor_id.IPV4_addr, portNum)
             }
@@ -320,7 +320,7 @@ func handleleavemsg(msg detector.Msg_t) {
         if neigh[0] == -1 || neigh[1] == -1 || neigh[2] == -1 || neigh[3] == -1{
             // No neighbors, so just tell everybody
             a := mem_table.Get_Hash_list()
-            for i := 0; i <= len(a); i++ {
+            for i := 0; i < len(a); i++ {
                 neighbor_id := mem_table.Get_node(a[i])
                 sendmessage(msg, neighbor_id.IPV4_addr, portNum)
             }
@@ -441,7 +441,7 @@ func declare_fail(node_hash int){
     if neigh[0] == -1 || neigh[1] == -1 || neigh[2] == -1 || neigh[3] == -1{
             // No neighbors, so just tell everybody
             a := mem_table.Get_Hash_list()
-            for i := 0; i <= len(a); i++ {
+            for i := 0; i < len(a); i++ {
                 neighbor_id := mem_table.Get_node(a[i])
                 sendmessage(msg, neighbor_id.IPV4_addr, portNum)
             }
