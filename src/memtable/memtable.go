@@ -7,9 +7,9 @@ import(
 )
 
 type Memtable struct{
-	mu sync.Mutex
-	table map[int]detector.Node_id_t
-	hash_list []int
+	Mu sync.Mutex
+	Table map[int]detector.Node_id_t
+	Hash_list []int
 }
 
 
@@ -22,53 +22,53 @@ func NewMemtable() Memtable{
 
 func (t *Memtable) Add_node(node_hash int, node_id detector.Node_id_t) {
 	//Grab lock 
-	t.mu.Lock()
+	t.Mu.Lock()
 	//Check if key exists
-	if _, ok := t.table[node_hash]; !ok { //Node is not in there
+	if _, ok := t.Table[node_hash]; !ok { //Node is not in there
 		//Add to map
-		t.table[node_hash] = node_id;
+		t.Table[node_hash] = node_id;
 		//Append key to slice
-		t.hash_list = append(t.hash_list, node_hash)
+		t.Hash_list = append(t.Hash_list, node_hash)
 		//Sort the slice
-		sort.Ints(t.hash_list);
+		sort.Ints(t.Hash_list);
 	}
 
 	//Release lock
-	t.mu.Unlock()
+	t.Mu.Unlock()
 }
 
 func (t *Memtable) Delete_node(node_hash int, node_id detector.Node_id_t) {
 	//Grab lock 
-	t.mu.Lock()
+	t.Mu.Lock()
 
-	if _, ok := t.table[node_hash]; ok { //Node is in there
+	if _, ok := t.Table[node_hash]; ok { //Node is in there
 		//Delete from map
-		delete(t.table, node_hash)
+		delete(t.Table, node_hash)
 		//Find key in list, delete key by switching with last element, then re-sort
 		i := 0
-		for ; i < len(t.hash_list) && t.hash_list[i] != node_hash; i++ {
+		for ; i < len(t.Hash_list) && t.Hash_list[i] != node_hash; i++ {
 			// i++
 		} 
-		if i != len(t.hash_list){
-    		t.hash_list[len(t.hash_list)-1], t.hash_list[i] = t.hash_list[i], t.hash_list[len(t.hash_list)-1]
-    		t.hash_list = t.hash_list[:len(t.hash_list)-1]
-			sort.Ints(t.hash_list);
+		if i != len(t.Hash_list){
+    		t.Hash_list[len(t.Hash_list)-1], t.Hash_list[i] = t.Hash_list[i], t.Hash_list[len(t.Hash_list)-1]
+    		t.Hash_list = t.Hash_list[:len(t.Hash_list)-1]
+			sort.Ints(t.Hash_list);
 		}
 	}
 
 	//Release lock
-	t.mu.Unlock()
+	t.Mu.Unlock()
 }
 
 
 func (t *Memtable) Get_node(node_hash int) detector.Node_id_t{
 	//Grab lock 
 	// var a detector.Node_id_t = nil
-	t.mu.Lock()
+	t.Mu.Lock()
 	//Get
-	a, ok := t.table[node_hash]
+	a, ok := t.Table[node_hash]
 	//Release lock
-	t.mu.Unlock()
+	t.Mu.Unlock()
 	
 	if(ok){
 		return a
@@ -91,71 +91,71 @@ func (t *Memtable) Get_neighbors(node_hash int) [4]int{
 
 	// fmt.Printf("Get_neighbors\n")
 
-	t.mu.Lock()
+	t.Mu.Lock()
 
-	if(len(t.hash_list) < 5){ //Not supposed to be functional cluster without 5 nodes
+	if(len(t.Hash_list) < 5){ //Not supposed to be functional cluster without 5 nodes
 		// fmt.Printf("Fuck this shit, %d, %d, %d, %d\n", ret[0], ret[1], ret[2], ret[3] )
-		t.mu.Unlock()
+		t.Mu.Unlock()
 		return ret
 	}
 
 	i := 0
-	for ; i < len(t.hash_list) && t.hash_list[i] != node_hash; i++ {
+	for ; i < len(t.Hash_list) && t.Hash_list[i] != node_hash; i++ {
 		// i++
 	} 
 
-	if(i >= len(t.hash_list)){ //Nonexistent
+	if(i >= len(t.Hash_list)){ //Nonexistent
 		//Do jack shit
-	}else if(i == len(t.hash_list)-1){ //Wraparound (last)
-		ret[0] = t.hash_list[i-2]
-		ret[1] = t.hash_list[i-1]
-		ret[2] = t.hash_list[0]
-		ret[3] = t.hash_list[1]
-	}else if(i == len(t.hash_list)-2){ //Wraparound (second to last)
-		ret[0] = t.hash_list[i-2]
-		ret[1] = t.hash_list[i-1]
-		ret[2] = t.hash_list[i+1]
-		ret[3] = t.hash_list[0]
+	}else if(i == len(t.Hash_list)-1){ //Wraparound (last)
+		ret[0] = t.Hash_list[i-2]
+		ret[1] = t.Hash_list[i-1]
+		ret[2] = t.Hash_list[0]
+		ret[3] = t.Hash_list[1]
+	}else if(i == len(t.Hash_list)-2){ //Wraparound (second to last)
+		ret[0] = t.Hash_list[i-2]
+		ret[1] = t.Hash_list[i-1]
+		ret[2] = t.Hash_list[i+1]
+		ret[3] = t.Hash_list[0]
 	}else if(i == 0){ //Wraparound (first)
-		ret[0] = t.hash_list[len(t.hash_list)-1]
-		ret[1] = t.hash_list[len(t.hash_list)]
-		ret[2] = t.hash_list[i+1]
-		ret[3] = t.hash_list[i+2]
+		ret[0] = t.Hash_list[len(t.Hash_list)-1]
+		ret[1] = t.Hash_list[len(t.Hash_list)]
+		ret[2] = t.Hash_list[i+1]
+		ret[3] = t.Hash_list[i+2]
 	}else if(i == 1){ //Wraparound {second}
-		ret[0] = t.hash_list[len(t.hash_list)]
-		ret[1] = t.hash_list[i-1]
-		ret[2] = t.hash_list[i+1]
-		ret[3] = t.hash_list[i+2]
+		ret[0] = t.Hash_list[len(t.Hash_list)]
+		ret[1] = t.Hash_list[i-1]
+		ret[2] = t.Hash_list[i+1]
+		ret[3] = t.Hash_list[i+2]
 	}else{	//Regular case
-		ret[0] = t.hash_list[i-2]
-		ret[1] = t.hash_list[i-1]
-		ret[2] = t.hash_list[i+1]
-		ret[3] = t.hash_list[i+2]
+		ret[0] = t.Hash_list[i-2]
+		ret[1] = t.Hash_list[i-1]
+		ret[2] = t.Hash_list[i+1]
+		ret[3] = t.Hash_list[i+2]
 	}
 	//Release lock
-	t.mu.Unlock()
+	t.Mu.Unlock()
 	return ret
 }
 
 
 func (t *Memtable) Get_num_nodes() int{
 	a := -1
-	t.mu.Lock()
-	a = len(t.table)
-	t.mu.Unlock()
+	t.Mu.Lock()
+	a = len(t.Table)
+	t.Mu.Unlock()
 	return a
 }
 
 func (t* Memtable) Get_avail_hash() int{
-	t.mu.Lock()
+	t.Mu.Lock()
 	i := 0
-	for ; i < len(t.hash_list) && t.hash_list[i] == i; i++ {
-			fmt.Printf("[Get_avail_hash] i is %d; len(hash_list) is %d; the value at i is %d.", i, len(t.hash_list), t.hash_list[i])
+	for ; i < len(t.Hash_list) && t.Hash_list[i] == i; i++ {
+			fmt.Printf("[Get_avail_hash] i is %d; len(hash_list) is %d; the value at i is %d\n.", i, len(t.Hash_list), t.Hash_list[i])
 	} 
-			fmt.Printf("[Get_avail_hash] Broke with i %d.", i)
-	t.mu.Unlock()
+			fmt.Printf("[Get_avail_hash] Broke with i %d.\n", i)
+	t.Mu.Unlock()
 
-	// if(i == len(t.hash_list)){
+	// if(i == len(t.Hash_list)){
 	// 	return -1
 	// }else{
 		return i
@@ -168,17 +168,17 @@ func (t *Memtable) String() string{
 	//Grab lock 
 	// var a detector.Node_id_t = nil
 	var ret string = ""
-	t.mu.Lock()
+	t.Mu.Lock()
 	//Get
 	ret += "Current Membership Table:\n"
 	temp := ""
-	for k, _ := range t.table{
-		temp = fmt.Sprintf("Hash: %d, Node_Id: %s@%d\n", k, t.table[k].IPV4_addr.String(), t.table[k].Timestamp )
+	for k, _ := range t.Table{
+		temp = fmt.Sprintf("Hash: %d, Node_Id: %s@%d\n", k, t.Table[k].IPV4_addr.String(), t.Table[k].Timestamp )
 		ret += temp
 	}
 	ret += "Sorted Key List: "
-	ret += fmt.Sprintf("%v\n", t.hash_list )
+	ret += fmt.Sprintf("%v\n", t.Hash_list )
 	//Release lock
-	t.mu.Unlock()
+	t.Mu.Unlock()
 	return ret
 }
