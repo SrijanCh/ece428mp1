@@ -41,7 +41,7 @@ const time_to_live = 4
 
 const MESSAGE_EXPIRE_TIME_MILLIS = 6000 // in milliseconds
 const REDUNDANCY_TABLE_CLEAR_TIME_MILLIS = 6000 // in milliseconds
-
+const HEARTBEAT_INTERVAL_MILLIS = 1000 // in milliseconds
 func sendmessage(msg_struct detector.Msg_t, ip_raw net.IP, portNum string) {
     msg, err := json.Marshal(msg_struct)
     if err != nil {
@@ -349,10 +349,24 @@ func sendmessageintroducer(msg_struct detector.Msg_t, portNum string) {
     }
 }
 
+func heartbeatsend() {
+        for {
+            neigh = beatable.Reval_table(node_hash, mem_table)
+            for i := 0; i <= len(neigh); i++ {
+                neighbor_id := mem_table.Get_node(neigh[i])
+                // Node id is generated in the msg
+                mesg := detector.Msg_t{detector.HEARTBEAT, time.Now().UnixNano(), node_id, time_to_live, byte(node_hash)}
+                sendmessage(mesg, neighbor_id.IPV4_addr, portNum)
+            }
+            time.Sleep(HEARTBEAT_INTERVAL_MILLIS * time.Millisecond)
+        }
+}
+
 func main() {
     mylog.Log_init()
     // init_()
     go listener()
+    go heartbeatsend()
     for{
         message_hashes_mutex.Lock()
         for k, e := range message_hashes {
