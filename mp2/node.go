@@ -112,9 +112,45 @@ func handlejoinreqmsg(msg detector.Msg_t, addr *net.UDPAddr) {
     }
 }
 
+
+func sendmessageintroducer(msg_struct detector.Msg_t, portNum string) {
+    msg, err := json.Marshal(msg_struct)
+    if err != nil {
+        mylog.Log_writeln("[sendmessageintroducer] Failed to marshal")
+        fmt.Printf("%s\n", err.Error())
+        // log.Fatal(err)
+    }
+    ip := introducer_ip
+    service := ip + ":" + portNum
+    fmt.Println("(sendmessage) SERVICE: %s", service)
+    remoteaddr , err := net.ResolveUDPAddr("udp", service)
+    if err != nil {
+        mylog.Log_writeln("[sendmessageintroducer] Failed to get remote address")
+        fmt.Printf("%s\n", err.Error())
+        return
+        // log.Fatal(err)
+    }
+    conn, err := net.DialUDP("udp", nil, remoteaddr)
+
+    if err != nil {
+        mylog.Log_writeln("[sendmessageintroducer] Failed to dial address")
+        fmt.Printf("%s\n", err.Error())
+        return
+        // log.Fatal(err)
+    }
+
+    defer conn.Close()
+    _ , err = conn.Write([]byte(msg))
+    if err != nil {
+        mylog.Log_writeln("[sendmessageintroducer] Failed to send message")
+        fmt.Printf("%s\n", err.Error())
+        // log.Fatal(err)
+    }
+}
+
 func sendintroinfo(node_hash int, pass_mem_table memtable.Memtable, addr *net.UDPAddr){
 
-    fmt.Printf("Got to sendintoinfo\n")
+    fmt.Printf("Got to sendintroinfo, sending to %s\n", (*addr).String())
     msg_struct := IntroMsg{node_hash, pass_mem_table}
     msg, err := json.Marshal(msg_struct)
     if err != nil {
@@ -433,42 +469,6 @@ func join_cluster(node_id detector.Node_id_t) IntroMsg{
         return msg
     }
     return IntroMsg{}
-}
-
-
-func sendmessageintroducer(msg_struct detector.Msg_t, portNum string) {
-    msg, err := json.Marshal(msg_struct)
-    if err != nil {
-        mylog.Log_writeln("[sendmessageintroducer] Failed to marshal")
-        fmt.Printf("%s\n", err.Error())
-        // log.Fatal(err)
-    }
-    ip := introducer_ip
-    service := ip + ":" + portNum
-    fmt.Println("(sendmessage) SERVICE: %s", service)
-    remoteaddr , err := net.ResolveUDPAddr("udp", service)
-    if err != nil {
-        mylog.Log_writeln("[sendmessageintroducer] Failed to get remote address")
-        fmt.Printf("%s\n", err.Error())
-        return
-        // log.Fatal(err)
-    }
-    conn, err := net.DialUDP("udp", nil, remoteaddr)
-
-    if err != nil {
-        mylog.Log_writeln("[sendmessageintroducer] Failed to dial address")
-        fmt.Printf("%s\n", err.Error())
-        return
-        // log.Fatal(err)
-    }
-
-    defer conn.Close()
-    _ , err = conn.Write([]byte(msg))
-    if err != nil {
-        mylog.Log_writeln("[sendmessageintroducer] Failed to send message")
-        fmt.Printf("%s\n", err.Error())
-        // log.Fatal(err)
-    }
 }
 
 func heartbeatsend() {
