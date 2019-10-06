@@ -410,7 +410,7 @@ func join_cluster(node_id detector.Node_id_t) IntroMsg{
         sendmessageintroducer(msg_struct, portNum)
         //Wait for reply
         //Set a deadline (play around with time to not duplicate message)
-        ln.SetReadDeadline(time.Now().Add(10000))
+        ln.SetReadDeadline(time.Now().Add(time.Millisecond * 10000))
         // wait for UDP client to connect
         _, _, err = ln.ReadFromUDP(buffer)
         if err != nil {
