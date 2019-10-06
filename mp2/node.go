@@ -52,7 +52,7 @@ func sendmessage(msg_struct detector.Msg_t, ip_raw net.IP, portNum string) {
     }
     ip := ip_raw.String()
     service := ip + ":" + portNum
-    fmt.Println("(sendmessage) SERVICE: %s", service)
+    fmt.Println("(sendmessage type %d) SERVICE: %s", msg_struct.Msg_type, service)
     remoteaddr , err := net.ResolveUDPAddr("udp", service)
     if err != nil {
         fmt.Printf("%s\n", err.Error())
