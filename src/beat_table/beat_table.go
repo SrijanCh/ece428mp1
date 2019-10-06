@@ -60,7 +60,7 @@ func (t *Beat_table) Get_beat(node_hash int) int64{
 	if _, ok := t.table[node_hash]; ok { //Node is in there
 		a = t.table[node_hash]
 	}else{
-		fmt.Printf("Just tried to get heartbeat of someone not in table")
+		fmt.Printf("Just tried to get heartbeat of someone not in table (%d)\n", node_hash)
 	}
 	t.mu.Unlock()
 	return a
