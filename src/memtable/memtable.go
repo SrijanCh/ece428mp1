@@ -150,8 +150,9 @@ func (t* Memtable) Get_avail_hash() int{
 	t.mu.Lock()
 	i := 0
 	for ; i < len(t.hash_list) && t.hash_list[i] == i; i++ {
-			//Just do that
+			fmt.Printf("[Get_avail_hash] i is %d; len(hash_list) is %d; the value at i is %d.", i, len(t.hash_list), t.hash_list[i])
 	} 
+			fmt.Printf("[Get_avail_hash] Broke with i %d.", i)
 	t.mu.Unlock()
 
 	// if(i == len(t.hash_list)){
