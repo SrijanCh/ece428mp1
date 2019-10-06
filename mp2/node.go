@@ -275,7 +275,8 @@ func handleconnection(buffer []byte, addr *net.UDPAddr) {
 }
 
 func listener() {
-    hostName := "localhost"
+    // hostName := "localhost"
+    hostName := my_node_id.IPV4_addr.String()
     service := hostName + ":" + portNum
     udpAddr, err := net.ResolveUDPAddr("udp4", service)
     if err != nil {
