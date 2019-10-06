@@ -81,6 +81,7 @@ func unmarshalmsg(buf []byte) detector.Msg_t{
         fmt.Printf("%s\n", err.Error())
         // log.Fatal(err)
         // return nil
+            
     }
     return msg
 }
