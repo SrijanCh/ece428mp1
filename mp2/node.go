@@ -181,7 +181,28 @@ func handleheartbeatmsg(msg detector.Msg_t) {
 }
 
 func handlefailmsg(msg detector.Msg_t) {
+    hash_msg := hashmsgstruct(msg)
+    exists := findkeyinmessagehashes(hash_msg)
+    if !exists {
+        
+        mem_table.Delete_node(int(msg.Node_hash), msg.Node_id)
+        
 
+        neigh = beatable.Reval_table(node_hash, mem_table)
+        
+        addtomessagehashes(hash_msg)
+
+        if msg.Time_to_live <= 0 {
+            return
+        }
+
+        msg.Time_to_live -= 1
+
+        for i := 0; i < len(neigh); i++ {
+            neighbor_id := mem_table.Get_node(neigh[i])
+            sendmessage(msg, neighbor_id.IPV4_addr, portNum)
+        }
+    }
 }
 
 func handleleavemsg(msg detector.Msg_t) {
