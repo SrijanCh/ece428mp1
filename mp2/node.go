@@ -45,25 +45,29 @@ const REDUNDANCY_TABLE_CLEAR_TIME_MILLIS = 6000 // in milliseconds
 func sendmessage(msg_struct detector.Msg_t, ip_raw net.IP, portNum string) {
     msg, err := json.Marshal(msg_struct)
     if err != nil {
-        log.Fatal(err)
+        fmt.Printf("%s\n", err.Error())
+        // log.Fatal(err)
     }
     ip := ip_raw.String()
     service := ip + ":" + portNum
     fmt.Println("(sendmessage) SERVICE: %s", service)
     remoteaddr , err := net.ResolveUDPAddr("udp", service)
     if err != nil {
-        log.Fatal(err)
+        fmt.Printf("%s\n", err.Error())
+        // log.Fatal(err)
     }
     conn, err := net.DialUDP("udp", nil, remoteaddr)
 
     if err != nil {
-        log.Fatal(err)
+        fmt.Printf("%s\n", err.Error())
+        // log.Fatal(err)
     }
 
     defer conn.Close()
     _ , err = conn.Write([]byte(msg))
     if err != nil {
-        log.Fatal(err)
+        fmt.Printf("%s\n", err.Error())
+        // log.Fatal(err)
     }
 }
 
@@ -71,7 +75,8 @@ func unmarshalmsg(buf []byte) detector.Msg_t{
     msg := detector.Msg_t{}
     err := json.Unmarshal(bytes.Trim(buf, "\x00"), &msg)
     if err != nil {
-        log.Fatal(err)
+        fmt.Printf("%s\n", err.Error())
+        // log.Fatal(err)
         // return nil
     }
     return msg
@@ -105,19 +110,22 @@ func sendintroinfo(node_hash int, mem_table memtable.Memtable, addr *net.UDPAddr
     msg_struct := IntroMsg{node_hash, mem_table}
     msg, err := json.Marshal(msg_struct)
     if err != nil {
-        log.Fatal(err)
+        fmt.Printf("%s\n", err.Error())
+        // log.Fatal(err)
     }
 
     conn, err := net.DialUDP("udp", nil, addr)
     if err != nil {
-        log.Fatal(err)
+        fmt.Printf("%s\n", err.Error())
+        // log.Fatal(err)
     }
 
     defer conn.Close()
 
     _ , err = conn.Write([]byte(msg))
     if err != nil {
-        log.Fatal(err)
+        fmt.Printf("%s\n", err.Error())
+        // log.Fatal(err)
     }
 }
 
@@ -225,12 +233,14 @@ func listener() {
     service := hostName + ":" + portNum
     udpAddr, err := net.ResolveUDPAddr("udp4", service)
     if err != nil {
-        log.Fatal(err)
+        fmt.Printf("%s\n", err.Error())
+        // log.Fatal(err)
     }
     // setup listener for incoming UDP connection
     ln, err := net.ListenUDP("udp", udpAddr)
     if err != nil {
-        log.Fatal(err)
+        fmt.Printf("%s\n", err.Error())
+        // log.Fatal(err)
     }
     fmt.Printf("UDP server up and listening on port " + portNum)
     mylog.Log_writeln("UDP server up and listening on port " + portNum)
@@ -241,7 +251,8 @@ func listener() {
         _, addr, err := ln.ReadFromUDP(buffer)
 
         if err != nil {
-            log.Fatal(err)
+            fmt.Printf("%s\n", err.Error())
+            // log.Fatal(err)
             continue
         }
         mylog.Log_writeln("Found new connection")
@@ -269,12 +280,14 @@ func join_cluster(node_id detector.Node_id_t) IntroMsg{
     service := hostName + ":" + portNum
     udpAddr, err := net.ResolveUDPAddr("udp4", service)
     if err != nil {
-        log.Fatal(err)
+        fmt.Printf("%s\n", err.Error())
+        // log.Fatal(err)
     }
     // setup listener for incoming UDP connection
     ln, err := net.ListenUDP("udp", udpAddr)
     if err != nil {
-        log.Fatal(err)
+        fmt.Printf("%s\n", err.Error())
+        // log.Fatal(err)
     }
     mylog.Log_writeln("UDP server up and listening on port " + portNum)
     buffer := make([]byte, 2048)
@@ -298,7 +311,8 @@ func join_cluster(node_id detector.Node_id_t) IntroMsg{
         msg := IntroMsg{}
         err = json.Unmarshal(bytes.Trim(buffer, "\x00"), &msg)
         if err != nil {
-            log.Fatal(err)
+            fmt.Printf("%s\n", err.Error())
+            // log.Fatal(err)
         }
         return msg
     }
@@ -309,25 +323,29 @@ func join_cluster(node_id detector.Node_id_t) IntroMsg{
 func sendmessageintroducer(msg_struct detector.Msg_t, portNum string) {
     msg, err := json.Marshal(msg_struct)
     if err != nil {
-        log.Fatal(err)
+        fmt.Printf("%s\n", err.Error())
+        // log.Fatal(err)
     }
     ip := introducer_ip
     service := ip + ":" + portNum
     fmt.Println("(sendmessage) SERVICE: %s", service)
     remoteaddr , err := net.ResolveUDPAddr("udp", service)
     if err != nil {
-        log.Fatal(err)
+        fmt.Printf("%s\n", err.Error())
+        // log.Fatal(err)
     }
     conn, err := net.DialUDP("udp", nil, remoteaddr)
 
     if err != nil {
-        log.Fatal(err)
+        fmt.Printf("%s\n", err.Error())
+        // log.Fatal(err)
     }
 
     defer conn.Close()
     _ , err = conn.Write([]byte(msg))
     if err != nil {
-        log.Fatal(err)
+        fmt.Printf("%s\n", err.Error())
+        // log.Fatal(err)
     }
 }
 
