@@ -25,15 +25,13 @@ func (t *Memtable) Add_node(node_hash int, node_id detector.Node_id_t) {
 	//Grab lock 
 	t.mu.Lock()
 	//Check if key exists
-	if val, ok := t.table[node_hash]; !ok { //Node is not in there
+	if _, ok := t.table[node_hash]; !ok { //Node is not in there
 		//Add to map
 		t.table[node_hash] = node_id;
 		//Append key to slice
 		t.hash_list = append(t.hash_list, node_hash)
 		//Sort the slice
 		sort.Ints(t.hash_list);
-	} else{
-		t.table[node_hash] = val //Fucking Go not allowing unused shit
 	}
 
 	//Release lock
@@ -44,7 +42,7 @@ func (t *Memtable) Delete_node(node_hash int, node_id detector.Node_id_t) {
 	//Grab lock 
 	t.mu.Lock()
 
-	if val, ok := t.table[node_hash]; !ok { //Node is not in there
+	if _, ok := t.table[node_hash]; ok { //Node is in there
 		//Delete from map
 		delete(t.table, node_hash)
 		//Find key in list, delete key by switching with last element, then re-sort
@@ -56,8 +54,6 @@ func (t *Memtable) Delete_node(node_hash int, node_id detector.Node_id_t) {
     		t.hash_list[len(t.hash_list)-1], t.hash_list[i] = t.hash_list[i], t.hash_list[len(t.hash_list)-1]
     		t.hash_list = t.hash_list[:len(t.hash_list)-1]
 			sort.Ints(t.hash_list);
-		} else{
-			t.table[node_hash] = val //Fucking Go not allowing unused shit
 		}
 	}
 
@@ -71,10 +67,16 @@ func (t *Memtable) Get_node(node_hash int) detector.Node_id_t{
 	// var a detector.Node_id_t = nil
 	t.mu.Lock()
 	//Get
-	a := t.table[node_hash]
+	a, ok := t.table[node_hash]
 	//Release lock
 	t.mu.Unlock()
-	return a
+	
+	if(ok){
+		return a
+	}else{
+		var b []byte
+		return detector.Node_id_t{0, b}
+	}
 }
 
 //[pred1, pred2, succ1, succ2]
