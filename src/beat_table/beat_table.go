@@ -77,11 +77,11 @@ func (t *Beat_table) Reval_table(node_hash int, mem_table memtable.Memtable) [4]
 
 	t.mu.Lock()
 	for i := 0; i < 4; i++{
-		// if _, ok := t.table[neighbors[i]]; ok { //Node is in there
-			// newtable[neighbors[i]] = 0
-		// }else{
-		newtable[neighbors[i]] = 0
-		// }
+		if _, ok := t.table[neighbors[i]]; ok { //Node is in there
+			newtable[neighbors[i]] = 0
+		}else{
+			newtable[neighbors[i]] = 0
+		}
 	}
 	t.table = newtable
 	t.mu.Unlock()
