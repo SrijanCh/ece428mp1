@@ -43,7 +43,7 @@ const time_to_live = 4
 const MESSAGE_EXPIRE_TIME_MILLIS = 6000 // in milliseconds
 const REDUNDANCY_TABLE_CLEAR_TIME_MILLIS = 6000 // in milliseconds
 const HEARTBEAT_INTERVAL_MILLIS = 1000 // in milliseconds
-const MONITOR_PERIOD_MILLIS = 3000
+const MONITOR_PERIOD_MILLIS = 3500
 
 func sendmessage(msg_struct detector.Msg_t, ip_raw net.IP, portNum string) {
     msg, err := json.Marshal(msg_struct)
