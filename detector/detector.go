@@ -52,7 +52,7 @@ type Node_id_t struct{
 
 type Msg_t struct{
 	Msg_type byte
-	Timestamp int
+	Timestamp int64
 	Node_id Node_id_t
 	Node_hash byte
 }
@@ -81,6 +81,6 @@ func Gen_node_id() Node_id_t{
     return Node_id_t{timestamp, currentIP}
 }
 
-func Gen_msg(msg_type byte, timestamp int, node_id Node_id_t, node_hash byte) Msg_t{
+func Gen_msg(msg_type byte, timestamp int64, node_id Node_id_t, node_hash byte) Msg_t{
 	return Msg_t{msg_type, timestamp, node_id, node_hash}
 }
