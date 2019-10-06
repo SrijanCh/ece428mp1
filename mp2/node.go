@@ -155,8 +155,12 @@ func sendintroinfo(node_hash int, pass_mem_table memtable.Memtable, addr *net.UD
     (*addr).Port = portNumber
     fmt.Printf("Got to sendintroinfo, sending hash %d and memtable below to %s\n", node_hash, (*addr).String())
     fmt.Printf("%s", mem_table.String())
-    msg_struct := IntroMsg{node_hash, pass_mem_table.RealToFake()}
-    msg, err := json.Marshal(msg_struct)
+    // msg_struct := IntroMsg{node_hash, pass_mem_table.RealToFake()}
+
+    map_to_send := pass_mem_table.RealToFake()
+    
+    // msg, err := json.Marshal(msg_struct)
+    msg, err := json.Marshal(map_to_send)
     if err != nil {
         fmt.Printf("%s\n", err.Error())
         // log.Fatal(err)
@@ -469,8 +473,11 @@ func join_cluster(node_id detector.Node_id_t) IntroMsg{
         }
         mylog.Log_writeln("Introducer has responded!")
         fmt.Printf("Pre-unmarshalled msg: %s\n", string(bytes.Trim(buffer, "\x00")))
+
+        
         msg := IntroMsg{}
-        err = json.Unmarshal(bytes.Trim(buffer, "\x00"), &msg)
+        var map_to_recv map[string]int64 = make(map[string]int64)
+        err = json.Unmarshal(bytes.Trim(buffer, "\x00"), &map_to_recv)
         if err != nil {
             mylog.Log_writeln("[join_cluster] Failed to unmarshal")
             fmt.Printf("%s\n", err.Error())
