@@ -10,6 +10,7 @@ import (
     "hash/fnv"
     "memtable"
     "bytes"
+    "mylog"
     // "beat_table"
 )
 var isintroducer = false;
@@ -178,22 +179,24 @@ func listener() {
     if err != nil {
         log.Fatal(err)
     }
-    fmt.Println("UDP server up and listening on port " + portNum)
+    mylog.Log_writeln("UDP server up and listening on port " + portNum)
     defer ln.Close()
     for {
         buffer := make([]byte, 1024)
         // wait for UDP client to connect
-        _, _, err := conn.ReadFromUDP(buffer)
+        _, _, err := ln.ReadFromUDP(buffer)
 
         if err != nil {
             log.Fatal(err)
             continue
         }
-        go handleconnection(ln)
+        mylog.Log_writeln("Found new connection")
+        go handleconnection(buffer)
     }
 }
 
 func init_() {
+    mylog.Log_init()
     n_id := detector.Gen_node_id()
     if n_id.IPV4_addr.String() == introducer_ip {
         isintroducer = true
