@@ -101,13 +101,16 @@ func handlejoinreqmsg(msg detector.Msg_t, addr *net.UDPAddr) {
 
         if neigh[0] == -1 || neigh[1] == -1 || neigh[2] == -1 || neigh[3] == -1{
             // No neighbors, so just tell everybody
+            fmt.Printf("Send Joins all to all\n")
             a := mem_table.Get_Hash_list()
             for i := 0; i < len(a); i++ {
+                if(a[i] == my_node_hash){
+                    continue
+                }
                 mesg := detector.Msg_t{detector.JOIN, time.Now().UnixNano(), msg.Node_id, time_to_live, byte(hash)}
                 neighbor_id := mem_table.Get_node(a[i])
                 sendmessage(mesg, neighbor_id.IPV4_addr, portNum)
             }
-
             return
         }
 
