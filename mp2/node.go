@@ -232,6 +232,7 @@ func listener() {
     if err != nil {
         log.Fatal(err)
     }
+    fmt.Printf("UDP server up and listening on port " + portNum)
     mylog.Log_writeln("UDP server up and listening on port " + portNum)
     defer ln.Close()
     for {
@@ -279,7 +280,7 @@ func join_cluster(node_id detector.Node_id_t) IntroMsg{
     buffer := make([]byte, 2048)
     defer ln.Close()
     for{
-        fmt.Printf("Messaging Introducer . . .")
+        fmt.Printf("Messaging Introducer . . .\n")
         //Message the introducer
         msg_struct := detector.Msg_t{detector.JOIN_REQ, time.Now().UnixNano(), node_id, byte(time_to_live), byte(node_hash)}
         sendmessageintroducer(msg_struct, portNum)
@@ -290,7 +291,7 @@ func join_cluster(node_id detector.Node_id_t) IntroMsg{
         _, _, err = ln.ReadFromUDP(buffer)
         if err != nil {
             //We timed out might be the error
-            fmt.Printf("Introducer never responded, trying again . . .")
+            fmt.Printf("Introducer never connected/responded, trying again . . .\n")
             continue
         }
         mylog.Log_writeln("Introducer has responded!")
@@ -344,6 +345,7 @@ func heartbeatsend() {
 }
 
 func main() {
+    mylog.Log_init()
     // init_()
     go listener()
     go heartbeatsend()
