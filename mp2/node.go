@@ -381,6 +381,7 @@ func init_() {
 
 func join_cluster(node_id detector.Node_id_t) IntroMsg{
     //Start up a server to receive back response
+    a := 0
     hostName := "localhost"
     service := hostName + ":" + portNum
     udpAddr, err := net.ResolveUDPAddr("udp4", service)
@@ -415,7 +416,8 @@ func join_cluster(node_id detector.Node_id_t) IntroMsg{
         if err != nil {
             //We timed out might be the error
             mylog.Log_writeln("[join_cluster] Introducer never connected/responded, trying again...")
-            fmt.Printf("Introducer never connected/responded, trying again . . .\n")
+            fmt.Printf("(%d) Introducer never connected/responded, trying again . . .\n", a)
+            a++
             continue
         }
         mylog.Log_writeln("Introducer has responded!")
