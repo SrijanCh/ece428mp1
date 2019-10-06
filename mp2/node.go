@@ -478,7 +478,7 @@ func join_cluster(node_id detector.Node_id_t) IntroMsg{
         
         // msg := IntroMsg{}
         // var map_to_recv map[string]int64 = make(map[string]int64)
-        var map_to_recv memtable.FakeMemtable
+        var map_to_recv memtable.FakeMemtable = memtable.FakeMemtable{}
         err = json.Unmarshal(bytes.Trim(buffer, "\x00"), &map_to_recv)
         if err != nil {
             mylog.Log_writeln("[join_cluster] Failed to unmarshal")
