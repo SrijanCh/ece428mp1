@@ -93,10 +93,10 @@ func handlejoinreqmsg(msg detector.Msg_t, addr *net.UDPAddr) {
         mem_table.Add_node(hash, msg.Node_id)
         neigh = beatable.Reval_table(my_node_hash, mem_table)
         
-        if neigh[0] == -1 || neigh[1] == -1 || neigh[2] == -1 || neigh[3] == -1{
-            fmt.Printf("Can't get neigh\n")
-            return
-        }
+        // if neigh[0] == -1 || neigh[1] == -1 || neigh[2] == -1 || neigh[3] == -1{
+        //     fmt.Printf("Can't get neigh\n")
+        //     return
+        // }
 
 
         // send this new node its hash_id and membership list
