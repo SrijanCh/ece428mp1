@@ -11,7 +11,6 @@ import (
     "memtable"
     "bytes"
     "mylog"
-    // "beat_table"
     "beat_table"
     "sync"
 )
@@ -36,7 +35,7 @@ var neigh [4]int = [4]int{-1,-1,-1,-1}
 
 const portNum = "6000"
 const introducer_hash = 0
-const introducer_ip =  "192.168.81.13" // CHANGE LATER
+const introducer_ip =  "172.22.154.255" // CHANGE LATER
 const time_to_live = 4
 
 const MESSAGE_EXPIRE_TIME_MILLIS = 6000 // in milliseconds
@@ -198,6 +197,7 @@ func handleheartbeatmsg(msg detector.Msg_t) {
 }
 
 func handlefailmsg(msg detector.Msg_t) {
+    mylog.Log_writeln("[handlefailmsg] Relaying failure message")
     hash_msg := hashmsgstruct(msg)
     exists := findkeyinmessagehashes(hash_msg)
     if !exists {
@@ -205,7 +205,7 @@ func handlefailmsg(msg detector.Msg_t) {
         mem_table.Delete_node(int(msg.Node_hash), msg.Node_id)
         
 
-        neigh = beatable.Reval_table(node_hash, mem_table)
+        neigh = beatable.Reval_table(my_node_hash, mem_table)
         
         addtomessagehashes(hash_msg)
 
@@ -223,6 +223,7 @@ func handlefailmsg(msg detector.Msg_t) {
 }
 
 func handleleavemsg(msg detector.Msg_t) {
+    mylog.Log_writeln("[handleleavemsg] Leaving the network")
     hash_msg := hashmsgstruct(msg)
     exists := findkeyinmessagehashes(hash_msg)
     if !exists {
@@ -254,6 +255,7 @@ func handleleavemsg(msg detector.Msg_t) {
 }
 
 func handleconnection(buffer []byte, addr *net.UDPAddr) {
+    mylog.Log_writeln("[handleconnection] Got new connection")
     msg := unmarshalmsg(buffer)
 
     switch msg.Msg_type {
@@ -307,6 +309,7 @@ func listener() {
 }
 
 func monitor(){
+    mylog.Log_writeln("[monitor] Starting up monitor...")
     var stamps = [4]int64{-1,-1,-1,-1}
     var fails []int
     for{
@@ -333,6 +336,7 @@ func monitor(){
 }
 
 func declare_fail(node_hash int){
+    mylog.Log_writeln("[declare_fail] Sending out failure messages...")
 
     // delete the node from table
     a := mem_table.Get_node(node_hash)
@@ -358,6 +362,7 @@ func init_() {
     mylog.Log_init()
     my_node_id = detector.Gen_node_id()
     if my_node_id.IPV4_addr.String() == introducer_ip {
+        fmt.Print("We are the introducer\n")
         isintroducer = true
         my_node_hash = introducer_hash
     } else {
@@ -380,6 +385,7 @@ func join_cluster(node_id detector.Node_id_t) IntroMsg{
     service := hostName + ":" + portNum
     udpAddr, err := net.ResolveUDPAddr("udp4", service)
     if err != nil {
+        mylog.Log_writeln("[join_cluster] Failed to resolve UDP address")
         fmt.Printf("%s\n", err.Error())
         return IntroMsg{}
         // log.Fatal(err)
@@ -387,6 +393,7 @@ func join_cluster(node_id detector.Node_id_t) IntroMsg{
     // setup listener for incoming UDP connection
     ln, err := net.ListenUDP("udp", udpAddr)
     if err != nil {
+        mylog.Log_writeln("[join_cluster] Failed to get listener")
         fmt.Printf("%s\n", err.Error())
         return IntroMsg{}
         // log.Fatal(err)
@@ -395,6 +402,7 @@ func join_cluster(node_id detector.Node_id_t) IntroMsg{
     buffer := make([]byte, 2048)
     defer ln.Close()
     for{
+        mylog.Log_writeln("[join_cluster] Messaging introducer...")
         fmt.Printf("Messaging Introducer . . .\n")
         //Message the introducer
         msg_struct := detector.Msg_t{detector.JOIN_REQ, time.Now().UnixNano(), node_id, byte(time_to_live), byte(my_node_hash)}
@@ -406,6 +414,7 @@ func join_cluster(node_id detector.Node_id_t) IntroMsg{
         _, _, err = ln.ReadFromUDP(buffer)
         if err != nil {
             //We timed out might be the error
+            mylog.Log_writeln("[join_cluster] Introducer never connected/responded, trying again...")
             fmt.Printf("Introducer never connected/responded, trying again . . .\n")
             continue
         }
@@ -413,6 +422,7 @@ func join_cluster(node_id detector.Node_id_t) IntroMsg{
         msg := IntroMsg{}
         err = json.Unmarshal(bytes.Trim(buffer, "\x00"), &msg)
         if err != nil {
+            mylog.Log_writeln("[join_cluster] Failed to unmarshal")
             fmt.Printf("%s\n", err.Error())
             // log.Fatal(err)
         }
@@ -425,6 +435,7 @@ func join_cluster(node_id detector.Node_id_t) IntroMsg{
 func sendmessageintroducer(msg_struct detector.Msg_t, portNum string) {
     msg, err := json.Marshal(msg_struct)
     if err != nil {
+        mylog.Log_writeln("[sendmessageintroducer] Failed to marshal")
         fmt.Printf("%s\n", err.Error())
         // log.Fatal(err)
     }
@@ -433,6 +444,7 @@ func sendmessageintroducer(msg_struct detector.Msg_t, portNum string) {
     fmt.Println("(sendmessage) SERVICE: %s", service)
     remoteaddr , err := net.ResolveUDPAddr("udp", service)
     if err != nil {
+        mylog.Log_writeln("[sendmessageintroducer] Failed to get remote address")
         fmt.Printf("%s\n", err.Error())
         return
         // log.Fatal(err)
@@ -440,6 +452,7 @@ func sendmessageintroducer(msg_struct detector.Msg_t, portNum string) {
     conn, err := net.DialUDP("udp", nil, remoteaddr)
 
     if err != nil {
+        mylog.Log_writeln("[sendmessageintroducer] Failed to dial address")
         fmt.Printf("%s\n", err.Error())
         return
         // log.Fatal(err)
@@ -448,6 +461,7 @@ func sendmessageintroducer(msg_struct detector.Msg_t, portNum string) {
     defer conn.Close()
     _ , err = conn.Write([]byte(msg))
     if err != nil {
+        mylog.Log_writeln("[sendmessageintroducer] Failed to send message")
         fmt.Printf("%s\n", err.Error())
         // log.Fatal(err)
     }
@@ -462,7 +476,7 @@ func heartbeatsend() {
                 continue
             }
 
-    
+            mylog.Log_writeln("Sending heartbeat") 
             for i := 0; i <= len(neigh); i++ {
                 neighbor_id := mem_table.Get_node(neigh[i])
                 // Node id is generated in the msg
@@ -481,6 +495,7 @@ func main() {
     go monitor()
     for{
         message_hashes_mutex.Lock()
+        mylog.Log_writeln("[main] Flushing redundancy map")
         for k, e := range message_hashes {
             t := time.Now().UnixNano()
             // measured in millis
