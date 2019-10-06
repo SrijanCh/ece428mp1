@@ -44,6 +44,7 @@ const MESSAGE_EXPIRE_TIME_MILLIS = 6000 // in milliseconds
 const REDUNDANCY_TABLE_CLEAR_TIME_MILLIS = 6000 // in milliseconds
 const HEARTBEAT_INTERVAL_MILLIS = 1000 // in milliseconds
 const MONITOR_PERIOD_MILLIS = 3000
+
 func sendmessage(msg_struct detector.Msg_t, ip_raw net.IP, portNum string) {
     msg, err := json.Marshal(msg_struct)
     if err != nil {
@@ -88,7 +89,9 @@ func unmarshalmsg(buf []byte) detector.Msg_t{
 }
 
 func handlejoinreqmsg(msg detector.Msg_t, addr *net.UDPAddr) {
+    fmt.Printf("Got join request from %s_%d\n", msg.Node_id.IPV4_addr, msg.Node_id.Timestamp )
     if isintroducer {
+        fmt.Printf("Handling request...\n")
         hash := mem_table.Get_avail_hash()
         // neigh := mem_table.Get_neigh(introducer_hash)
 
@@ -112,6 +115,8 @@ func handlejoinreqmsg(msg detector.Msg_t, addr *net.UDPAddr) {
                 sendmessage(mesg, neighbor_id.IPV4_addr, portNum)
             }
             return
+        } else {
+            fmt.Printf("Send Joins to neighbors\n")
         }
 
         // if neigh[0] == -1 || neigh[1] == -1 || neigh[2] == -1 || neigh[3] == -1{
@@ -127,6 +132,7 @@ func handlejoinreqmsg(msg detector.Msg_t, addr *net.UDPAddr) {
         }
     } else {
         // log .Fatal("Only introducer should receive JOIN_REQUESTS. Ignoring")
+        fmt.Printf("No need to handle the request, we are not introducer.\n")
     }
 }
 
@@ -221,6 +227,7 @@ func findkeyinmessagehashes(hash int) bool {
 }
 
 func handlejoinmsg(msg detector.Msg_t) {
+    fmt.Printf("Join message of %s_%d at %d received.\n", msg.Node_id.IPV4_addr, msg.Node_id.Timestamp, msg.Node_hash)
     hash_msg := hashmsgstruct(msg)
     exists := findkeyinmessagehashes(hash_msg)
     if !exists {
@@ -261,15 +268,21 @@ func handlejoinmsg(msg detector.Msg_t) {
             neighbor_id := mem_table.Get_node(neigh[i])
             sendmessage(msg, neighbor_id.IPV4_addr, portNum)
         }
+        fmt.Printf("Membership table:\n %s.\n", mem_table.String())
+    }else{
+        fmt.Printf("This is a repeat, discarding message.")
     }
 }
 
 //TODO
 func handleheartbeatmsg(msg detector.Msg_t) {
+    fmt.Printf("Heartbeat from %s_%d at %d received.\n", msg.Node_id.IPV4_addr, msg.Node_id.Timestamp, msg.Node_hash)
     beatable.Log_beat(int(msg.Node_hash), msg.Timestamp)
+    // fmt.Printf("Membership table:\n %s.\n", mem_table.String())
 }
 
 func handlefailmsg(msg detector.Msg_t) {
+    fmt.Printf("Failure of %s_%d at %d received.\n", msg.Node_id.IPV4_addr, msg.Node_id.Timestamp, msg.Node_hash)
     mylog.Log_writeln("[handlefailmsg] Relaying failure message")
     hash_msg := hashmsgstruct(msg)
     exists := findkeyinmessagehashes(hash_msg)
@@ -303,10 +316,14 @@ func handlefailmsg(msg detector.Msg_t) {
             neighbor_id := mem_table.Get_node(neigh[i])
             sendmessage(msg, neighbor_id.IPV4_addr, portNum)
         }
+        fmt.Printf("Membership table:\n %s.\n", mem_table.String())
+    }else{
+        fmt.Printf("This is a repeat, discarding message.")
     }
 }
 
 func handleleavemsg(msg detector.Msg_t) {
+    fmt.Printf("Leave of %s_%d at %d received.\n", msg.Node_id.IPV4_addr, msg.Node_id.Timestamp, msg.Node_hash)
     mylog.Log_writeln("[handleleavemsg] Leaving the network")
     hash_msg := hashmsgstruct(msg)
     exists := findkeyinmessagehashes(hash_msg)
@@ -344,11 +361,15 @@ func handleleavemsg(msg detector.Msg_t) {
             neighbor_id := mem_table.Get_node(neigh[i])
             sendmessage(msg, neighbor_id.IPV4_addr, portNum)
         }
+
+        fmt.Printf("Membership table:\n %s.\n", mem_table.String())
+    }else{
+        fmt.Printf("This is a repeat, discarding message.")
     }
 }
 
 func handleconnection(buffer []byte, addr *net.UDPAddr) {
-    mylog.Log_writeln("[handleconnection] Got new connection")
+    fmt.Printf("[handleconnection] Got new connection\n")
     msg := unmarshalmsg(buffer)
 
     switch msg.Msg_type {
@@ -430,7 +451,7 @@ func monitor(){
 }
 
 func declare_fail(node_hash int){
-    mylog.Log_writeln("[declare_fail] Sending out failure messages...")
+    fmt.Printf("~~~~~~~~~~~~FAILURE OF %s_%d AT %d DETECTED~~~~~~~~~~~.\n", mem_table.Get_node(node_hash).IPV4_addr, mem_table.Get_node(node_hash).Timestamp, node_hash)
 
     // delete the node from table
     a := mem_table.Get_node(node_hash)
@@ -458,6 +479,7 @@ func declare_fail(node_hash int){
             neighbor_id := mem_table.Get_node(neigh[i])
             sendmessage(msg, neighbor_id.IPV4_addr, portNum)
     }
+    fmt.Printf("Membership table:\n %s.\n", mem_table.String())
 }
 
 func init_() {
