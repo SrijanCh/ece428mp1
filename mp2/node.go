@@ -13,6 +13,7 @@ import (
     "mylog"
     // "beat_table"
     "beat_table"
+    "sync"
 )
 
 type IntroMsg struct{
@@ -25,7 +26,8 @@ var isintroducer = false;
 var node_id detector.Node_id_t
 var node_hash = -1
 // Add mem table declaration here
-var message_hashes = make(map[int]int)
+var message_hashes_mutex = &sync.Mutex{}
+var message_hashes = make(map[int]int64)
 var mem_table memtable.Memtable = memtable.NewMemtable()
 
 //Beat Table
@@ -36,6 +38,9 @@ const portNum = "6000"
 const introducer_hash = 0
 const introducer_ip =  "192.168.81.13" // CHANGE LATER
 const time_to_live = 4
+
+const MESSAGE_EXPIRE_TIME_MILLIS = 6000 // in milliseconds
+const REDUNDANCY_TABLE_CLEAR_TIME_MILLIS = 6000 // in milliseconds
 
 func sendmessage(msg_struct detector.Msg_t, ip_raw net.IP, portNum string) {
     msg, err := json.Marshal(msg_struct)
@@ -124,9 +129,22 @@ func hashmsgstruct(msg detector.Msg_t) int{
     return int(h.Sum32())
 }
 
+func addtomessagehashes(hash int) {
+    message_hashes_mutex.Lock()
+    message_hashes[hash] = time.Now().UnixNano()
+    message_hashes_mutex.Unlock()
+}
+
+func findkeyinmessagehashes(hash int) bool {
+    message_hashes_mutex.Lock()
+    _, exists := message_hashes[hash]
+    message_hashes_mutex.Unlock()
+    return exists
+}
+
 func handlejoinmsg(msg detector.Msg_t) {
     hash_msg := hashmsgstruct(msg)
-    _, exists := message_hashes[hash_msg]
+    exists := findkeyinmessagehashes(hash_msg)
     if !exists {
 
         // add the node to the table
@@ -134,8 +152,7 @@ func handlejoinmsg(msg detector.Msg_t) {
         neigh = beatable.Reval_table(node_hash, mem_table)
 
         // add it to the map, and then process it
-        message_hashes[hash_msg] = 0
-
+        addtomessagehashes(hash_msg)
         // dont continue to send if no more jumps left
         if msg.Time_to_live <= 0 {
             return
@@ -161,14 +178,14 @@ func handlefailmsg(msg detector.Msg_t) {
 
 func handleleavemsg(msg detector.Msg_t) {
     hash_msg := hashmsgstruct(msg)
-    _, exists := message_hashes[hash_msg]
+    exists := findkeyinmessagehashes(hash_msg)
     if !exists {
 
         // delete the node from table
         mem_table.Delete_node(int(msg.Node_hash), msg.Node_id)
         neigh = beatable.Reval_table(node_hash, mem_table)
 
-        message_hashes[hash_msg] = 0
+        addtomessagehashes(hash_msg)
 
         if msg.Time_to_live <= 0 {
             return
@@ -319,7 +336,16 @@ func main() {
     // init_()
     go listener()
     for{
-
+        message_hashes_mutex.Lock()
+        for k, e := range message_hashes {
+            t := time.Now().UnixNano()
+            // measured in millis
+            if ((t - e) / 1000000) >= MESSAGE_EXPIRE_TIME_MILLIS {
+                delete(message_hashes, k)
+            }
+        }
+        message_hashes_mutex.Unlock()
+        time.Sleep(REDUNDANCY_TABLE_CLEAR_TIME_MILLIS * time.Millisecond)
     }
 }
 
