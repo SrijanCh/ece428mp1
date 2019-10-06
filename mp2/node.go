@@ -98,6 +98,7 @@ func handlejoinreqmsg(msg detector.Msg_t, addr *net.UDPAddr) {
         // add the node to the introducers table
         mem_table.Add_node(hash, msg.Node_id)
         neigh = beatable.Reval_table(my_node_hash, mem_table)
+        fmt.Printf("Membership table:\n %s.\n", mem_table.String())
         
         // send this new node its hash_id and membership list
         sendintroinfo(hash, mem_table, addr)
@@ -231,10 +232,12 @@ func handlejoinmsg(msg detector.Msg_t) {
     hash_msg := hashmsgstruct(msg)
     exists := findkeyinmessagehashes(hash_msg)
     if !exists {
+        fmt.Printf("First time seen; handling...\n")  
 
         // add the node to the table
         mem_table.Add_node(int(msg.Node_hash), msg.Node_id)
         neigh = beatable.Reval_table(my_node_hash, mem_table)
+        fmt.Printf("New membership table:\n %s.\n", mem_table.String())
         
         // if neigh[0] == -1 || neigh[1] == -1 || neigh[2] == -1 || neigh[3] == -1{
         //     fmt.Printf("Can't get neigh\n")
@@ -268,7 +271,6 @@ func handlejoinmsg(msg detector.Msg_t) {
             neighbor_id := mem_table.Get_node(neigh[i])
             sendmessage(msg, neighbor_id.IPV4_addr, portNum)
         }
-        fmt.Printf("Membership table:\n %s.\n", mem_table.String())
     }else{
         fmt.Printf("This is a repeat, discarding message.")
     }
@@ -287,11 +289,11 @@ func handlefailmsg(msg detector.Msg_t) {
     hash_msg := hashmsgstruct(msg)
     exists := findkeyinmessagehashes(hash_msg)
     if !exists {
+        fmt.Printf("First time seen; handling...\n")  
         
         mem_table.Delete_node(int(msg.Node_hash), msg.Node_id)
-        
-
         neigh = beatable.Reval_table(my_node_hash, mem_table)
+        fmt.Printf("New membership table:\n %s.\n", mem_table.String())
         
         addtomessagehashes(hash_msg)
 
@@ -316,7 +318,6 @@ func handlefailmsg(msg detector.Msg_t) {
             neighbor_id := mem_table.Get_node(neigh[i])
             sendmessage(msg, neighbor_id.IPV4_addr, portNum)
         }
-        fmt.Printf("Membership table:\n %s.\n", mem_table.String())
     }else{
         fmt.Printf("This is a repeat, discarding message.")
     }
@@ -328,10 +329,12 @@ func handleleavemsg(msg detector.Msg_t) {
     hash_msg := hashmsgstruct(msg)
     exists := findkeyinmessagehashes(hash_msg)
     if !exists {
+        fmt.Printf("First time seen; handling...\n")  
 
         // delete the node from table
         mem_table.Delete_node(int(msg.Node_hash), msg.Node_id)
         neigh = beatable.Reval_table(my_node_hash, mem_table)
+        fmt.Printf("New membership table:\n %s.\n", mem_table.String())
         
         // if neigh[0] == -1 || neigh[1] == -1 || neigh[2] == -1 || neigh[3] == -1{
         //     fmt.Printf("Can't get neigh\n")
@@ -457,8 +460,7 @@ func declare_fail(node_hash int){
     a := mem_table.Get_node(node_hash)
     mem_table.Delete_node(int(node_hash), mem_table.Get_node(node_hash))
     neigh = beatable.Reval_table(my_node_hash, mem_table)
-        
-    
+    fmt.Printf("New membership table:\n %s.\n", mem_table.String())
 
 
     msg := detector.Msg_t{detector.FAIL, time.Now().UnixNano(), a, byte(time_to_live), byte(node_hash)}
@@ -479,7 +481,6 @@ func declare_fail(node_hash int){
             neighbor_id := mem_table.Get_node(neigh[i])
             sendmessage(msg, neighbor_id.IPV4_addr, portNum)
     }
-    fmt.Printf("Membership table:\n %s.\n", mem_table.String())
 }
 
 func init_() {
