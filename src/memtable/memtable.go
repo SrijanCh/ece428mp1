@@ -1,6 +1,6 @@
 package memtable
 import(
-	// "fmt"
+	"fmt"
 	"sync"
 	"detector"
 	"sort"
@@ -160,4 +160,24 @@ func (t* Memtable) Get_avail_hash() int{
 		return i
 	}
 
+}
+
+
+func (t *Memtable) String() string{
+	//Grab lock 
+	// var a detector.Node_id_t = nil
+	var ret string = ""
+	t.mu.Lock()
+	//Get
+	ret += "Current Membership Table:\n"
+	temp := ""
+	for k, _ := range t.table{
+		temp = fmt.Sprintf("Hash: %d, Node_Id: %s@%d\n", k, t.table[k].IPV4_addr.String(), t.table[k].Timestamp )
+		ret += temp
+	}
+	ret += "Sorted Key List: "
+	ret += fmt.Sprintf("%v\n", t.hash_list )
+	//Release lock
+	t.mu.Unlock()
+	return ret
 }
