@@ -97,7 +97,7 @@ func handlejoinreqmsg(msg detector.Msg_t, addr *net.UDPAddr) {
         sendintroinfo(hash, mem_table, addr)
 
         if neigh[0] == -1 || neigh[1] == -1 || neigh[2] == -1 || neigh[3] == -1{
-            fmt.Printf("Can't get neigh\n")
+            // fmt.Printf("Can't get neigh\n")
             return
         }
         // send a join message to 2 previous and next nodes
@@ -113,6 +113,8 @@ func handlejoinreqmsg(msg detector.Msg_t, addr *net.UDPAddr) {
 }
 
 func sendintroinfo(node_hash int, pass_mem_table memtable.Memtable, addr *net.UDPAddr){
+
+    fmt.Printf("Got to sendintoinfo\n")
     msg_struct := IntroMsg{node_hash, pass_mem_table}
     msg, err := json.Marshal(msg_struct)
     if err != nil {
@@ -134,6 +136,7 @@ func sendintroinfo(node_hash int, pass_mem_table memtable.Memtable, addr *net.UD
         fmt.Printf("%s\n", err.Error())
         // log.Fatal(err)
     }
+    fmt.Printf("Ended sendintroinfo\n")
 }
 
 // a function that returns the hash of a structs members except the time to live
