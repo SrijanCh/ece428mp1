@@ -22,6 +22,7 @@ type FakeMemtable struct{
 
 func (t *Memtable) RealToFake() FakeMemtable{
 	fake := FakeMemtable{}
+	fake.Table = make(map[string]detector.Node_id_t)
 	t.Mu.Lock()
 	for k, _ := range t.Table{
 		fake.Table[fmt.Sprintf("%d", k)] = t.Table[k]
@@ -37,6 +38,7 @@ func (t *Memtable) RealToFake() FakeMemtable{
 
 func FakeToReal(fake FakeMemtable) Memtable{
 	t := Memtable{}
+	t.Table = make(map[int]detector.Node_id_t)
 	t.Mu.Lock()
 	for k, _ := range fake.Table{
 		var a64 int64 = 0
