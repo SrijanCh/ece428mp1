@@ -272,13 +272,13 @@ func handlejoinmsg(msg detector.Msg_t) {
             sendmessage(msg, neighbor_id.IPV4_addr, portNum)
         }
     }else{
-        fmt.Printf("This is a repeat, discarding message.")
+        fmt.Printf("This is a repeat, discarding message.\n")
     }
 }
 
 //TODO
 func handleheartbeatmsg(msg detector.Msg_t) {
-    fmt.Printf("Heartbeat from %s_%d at %d received.\n", msg.Node_id.IPV4_addr, msg.Node_id.Timestamp, msg.Node_hash)
+    fmt.Printf("Heartbeat from %s_%d at %d received (current neigh is %v).\n", msg.Node_id.IPV4_addr, msg.Node_id.Timestamp, msg.Node_hash, neigh)
     beatable.Log_beat(int(msg.Node_hash), msg.Timestamp)
     // fmt.Printf("Membership table:\n %s.\n", mem_table.String())
 }
@@ -319,7 +319,7 @@ func handlefailmsg(msg detector.Msg_t) {
             sendmessage(msg, neighbor_id.IPV4_addr, portNum)
         }
     }else{
-        fmt.Printf("This is a repeat, discarding message.")
+        fmt.Printf("This is a repeat, discarding message.\n")
     }
 }
 
@@ -367,7 +367,7 @@ func handleleavemsg(msg detector.Msg_t) {
 
         fmt.Printf("Membership table:\n %s.\n", mem_table.String())
     }else{
-        fmt.Printf("This is a repeat, discarding message.")
+        fmt.Printf("This is a repeat, discarding message.\n")
     }
 }
 
@@ -590,6 +590,8 @@ func heartbeatsend() {
             }
 
             mylog.Log_writeln("Sending heartbeat") 
+
+            fmt.Printf("Sending heartbeat (current neighbors list is %v)\n", neigh) 
             for i := 0; i < len(neigh); i++ {
                 neighbor_id := mem_table.Get_node(neigh[i])
                 // Node id is generated in the msg
