@@ -13,6 +13,7 @@ import (
     "mylog"
     "beat_table"
     "sync"
+    "strconv"
 )
 
 type IntroMsg struct{
@@ -475,14 +476,27 @@ func join_cluster(node_id detector.Node_id_t) IntroMsg{
         fmt.Printf("Pre-unmarshalled msg: %s\n", string(bytes.Trim(buffer, "\x00")))
 
         
-        msg := IntroMsg{}
-        var map_to_recv map[string]int64 = make(map[string]int64)
+        // msg := IntroMsg{}
+        // var map_to_recv map[string]int64 = make(map[string]int64)
+        var map_to_recv memtable.FakeMemtable
         err = json.Unmarshal(bytes.Trim(buffer, "\x00"), &map_to_recv)
         if err != nil {
             mylog.Log_writeln("[join_cluster] Failed to unmarshal")
             fmt.Printf("%s\n", err.Error())
             // log.Fatal(err)
         }
+
+        var node_hash int = 0
+        //Because marshalling is a massive bitch, we're going to get our own node_hash
+        for k, _ := range map_to_recv.Table{
+            var a64 int64 = 0
+            a64, _ = strconv.ParseInt(k, 10, 32)
+            if my_node_id.IPV4_addr.Equal(map_to_recv.Table[k].IPV4_addr) && my_node_id.Timestamp == map_to_recv.Table[k].Timestamp {
+                node_hash = int(a64)
+            }
+        }
+
+        msg := IntroMsg{node_hash, map_to_recv}
         return msg
     }
     return IntroMsg{}
