@@ -159,7 +159,7 @@ func sendintroinfo(node_hash int, pass_mem_table memtable.Memtable, addr *net.UD
         fmt.Printf("%s\n", err.Error())
         // log.Fatal(err)
     }
-
+    fmt.Printf("Post-Marshalled msg: %s\n", string(msg))
     conn, err := net.DialUDP("udp", nil, addr)
     if err != nil {
         fmt.Printf("%s\n", err.Error())
@@ -466,6 +466,7 @@ func join_cluster(node_id detector.Node_id_t) IntroMsg{
             continue
         }
         mylog.Log_writeln("Introducer has responded!")
+        fmt.Printf("Pre-unmarshalled msg: %s\n", string(bytes.Trim(buffer, "\x00")))
         msg := IntroMsg{}
         err = json.Unmarshal(bytes.Trim(buffer, "\x00"), &msg)
         if err != nil {
