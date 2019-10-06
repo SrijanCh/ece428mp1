@@ -411,7 +411,7 @@ func init_() {
         mem_table = intro_info.table
         neigh = beatable.Reval_table(my_node_hash, mem_table)   
     }       
-    fmt.Printf("Our node is initialized! This node is hashed to " + string(my_node_hash) + " with node_id " + my_node_id.IPV4_addr.String() + ":" + string(my_node_id.Timestamp) + ".\n")
+    fmt.Printf("Our node is initialized! This node is hashed to %d with node_id %s:%d.\n", my_node_hash, my_node_id.IPV4_addr.String(), my_node_id.Timestamp)
 
     if neigh[0] == -1 || neigh[1] == -1 || neigh[2] == -1 || neigh[3] == -1{
         fmt.Printf("Can't get neigh\n")
