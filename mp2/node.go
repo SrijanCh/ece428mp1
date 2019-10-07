@@ -709,13 +709,11 @@ func main() {
     for {
         reader := bufio.NewReader(os.Stdin)
         text, _ := reader.ReadString('\n')
-        strings.TrimSpace(text)
-        strings.TrimRight(text, "\r\n")
         fmt.Printf("Input = %s\n", text)
-        if text == "leave" {
+        if text == "leave\n" {
             mylog.Log_writeln("Leaving the network")
             leave()
-        } else if text == "join" {
+        } else if text == "join\n" {
             mylog.Log_writeln("Joining the network!")
             join()
         } else {
