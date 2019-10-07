@@ -96,7 +96,7 @@ func handlejoinreqmsg(msg detector.Msg_t, addr *net.UDPAddr) {
         // neigh := mem_table.Get_neigh(introducer_hash)
 
         // add the node to the introducers table
-        sell_crack()
+        // sell_crack()
         mem_table.Add_node(hash, msg.Node_id)
         neigh = beatable.Reval_table(my_node_hash, mem_table)
         fmt.Printf("Membership table:\n %s.\n", mem_table.String())
@@ -236,7 +236,7 @@ func handlejoinmsg(msg detector.Msg_t) {
         fmt.Printf("First time seen; handling...\n")  
 
         // add the node to the table
-        sell_crack()
+        // sell_crack()
         mem_table.Add_node(int(msg.Node_hash), msg.Node_id)
         neigh = beatable.Reval_table(my_node_hash, mem_table)
         fmt.Printf("New membership table:\n %s.\n", mem_table.String())
@@ -294,7 +294,7 @@ func handlefailmsg(msg detector.Msg_t) {
     if !exists {
         fmt.Printf("First time seen; handling...\n")  
         
-        sell_crack()
+        // sell_crack()
         mem_table.Delete_node(int(msg.Node_hash), msg.Node_id)
         neigh = beatable.Reval_table(my_node_hash, mem_table)
         fmt.Printf("New membership table:\n %s.\n", mem_table.String())
@@ -335,7 +335,7 @@ func handleleavemsg(msg detector.Msg_t) {
     if !exists {
         fmt.Printf("First time seen; handling...\n")  
 
-        sell_crack()
+        // sell_crack()
         // delete the node from table
         mem_table.Delete_node(int(msg.Node_hash), msg.Node_id)
         neigh = beatable.Reval_table(my_node_hash, mem_table)
@@ -465,7 +465,7 @@ func declare_fail(node_hash int){
     // delete the node from table
     a := mem_table.Get_node(node_hash)
 
-    sell_crack()
+    // sell_crack()
     mem_table.Delete_node(int(node_hash), mem_table.Get_node(node_hash))
     neigh = beatable.Reval_table(my_node_hash, mem_table)
     fmt.Printf("New membership table:\n %s.\n", mem_table.String())
