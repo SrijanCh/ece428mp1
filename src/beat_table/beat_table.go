@@ -31,7 +31,7 @@ func (t *Beat_table) Check_num() int{
 
 func (t *Beat_table) Log_beat(node_hash int, timestamp int64){
 	if timestamp == 0{
-		fmt.Printf("LOGGING A TIMESTAMP OF ZERO\n")
+		fmt.Printf("===========================================LOGGING A TIMESTAMP OF ZERO========================================================\n")
 	}
 
 	t.mu.Lock()
@@ -67,6 +67,9 @@ func (t *Beat_table) Get_beat(node_hash int) int64{
 		fmt.Printf("Just tried to get heartbeat of someone not in table (%d)\n", node_hash)
 	}
 	t.mu.Unlock()
+	if a == 0{
+		fmt.Printf("[Get_beat]===========================================RETURNING A TIMESTAMP OF ZERO========================================================\n")
+	}
 	return a
 }
 

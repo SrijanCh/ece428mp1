@@ -282,6 +282,10 @@ func handlejoinmsg(msg detector.Msg_t) {
 func handleheartbeatmsg(msg detector.Msg_t) {
     fmt.Printf("Heartbeat from %s_%d at %d with Timestamp %d received (our current neigh is %v).\n", msg.Node_id.IPV4_addr, 
                                                     msg.Node_id.Timestamp, msg.Node_hash, msg.Timestamp, neigh)
+
+    if(msg.Timestamp == 0){
+        fmt.Printf("================================================THIS HEARTBEAT HAS TIMESTAMP 0===========================================================\n", neigh) 
+    }
     beatable.Log_beat(int(msg.Node_hash), msg.Timestamp)
     // fmt.Printf("Membership table:\n %s.\n", mem_table.String())
 }
@@ -605,6 +609,11 @@ func heartbeatsend() {
                 neighbor_id := mem_table.Get_node(neigh[i])
                 // Node id is generated in the msg
                 mesg := detector.Msg_t{detector.HEARTBEAT, time.Now().UnixNano(), my_node_id, time_to_live, byte(my_node_hash)}
+                
+                if(mesg.Timestamp == 0){
+                    fmt.Printf("================================================Sending heartbeat with Timestamp 0===========================================================\n", neigh) 
+                }
+
                 sendmessage(mesg, neighbor_id.IPV4_addr, portNum)
             }
             time.Sleep(HEARTBEAT_INTERVAL_MILLIS * time.Millisecond)
