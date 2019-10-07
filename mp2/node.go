@@ -114,7 +114,7 @@ func handlejoinreqmsg(msg detector.Msg_t, addr *net.UDPAddr) {
                 }
                 mesg := detector.Msg_t{detector.JOIN, time.Now().UnixNano(), msg.Node_id, time_to_live, byte(hash)}
                 neighbor_id := mem_table.Get_node(a[i])
-                sendmessage(mesg, neighbor_id.IPV4_addr, portNum)
+                sendmessage(msg, neighbor_id.IPV4_addr, portNum)
             }
             return
         } else {
@@ -479,12 +479,12 @@ func declare_fail(node_hash int){
     msg := detector.Msg_t{detector.FAIL, time.Now().UnixNano(), a, byte(time_to_live), byte(node_hash)}
 
     if neigh[0] == -1 || neigh[1] == -1 || neigh[2] == -1 || neigh[3] == -1{
-            // No neighbors, so shut up until we have 5
-            // a := mem_table.Get_Hash_list()
-            // for i := 0; i < len(a); i++ {
-            //     neighbor_id := mem_table.Get_node(a[i])
-            //     sendmessage(msg, neighbor_id.IPV4_addr, portNum)
-            // }
+            // No neighbors, so just tell everybody
+            a := mem_table.Get_Hash_list()
+            for i := 0; i < len(a); i++ {
+                neighbor_id := mem_table.Get_node(a[i])
+                sendmessage(msg, neighbor_id.IPV4_addr, portNum)
+            }
 
         return
     }
