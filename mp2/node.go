@@ -504,12 +504,14 @@ func init_() {
         isintroducer = true
         my_node_hash = introducer_hash
         mem_table.Add_node(my_node_hash, my_node_id)
-        neigh = beatable.Reval_table(my_node_hash, mem_table)  
+        neigh = beatable.Reval_table(my_node_hash, mem_table)
+        fmt.Printf("Init membership table:\n %s.\n", mem_table.String())  
     } else {
         intro_info := join_cluster(my_node_id)
         my_node_hash = intro_info.node_hash
         mem_table = memtable.FakeToReal(intro_info.table)
         neigh = beatable.Reval_table(my_node_hash, mem_table)   
+        fmt.Printf("Init membership table:\n %s.\n", mem_table.String())
     }       
     fmt.Printf("Our node is initialized! This node is hashed to %d with node_id %s:%d.\n", my_node_hash, my_node_id.IPV4_addr.String(), my_node_id.Timestamp)
     fmt.Printf("Our membership table currently looks as such:\n %s.\n", mem_table.String())
