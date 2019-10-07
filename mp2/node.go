@@ -14,6 +14,9 @@ import (
     "beat_table"
     "sync"
     "strconv"
+    "bufio"
+    "strings"
+    "os"
 )
 
 type IntroMsg struct{
@@ -345,10 +348,6 @@ func handleleavemsg(msg detector.Msg_t) {
         neigh = beatable.Reval_table(my_node_hash, mem_table)
         fmt.Printf("New membership table:\n %s.\n", mem_table.String())
         
-        // if neigh[0] == -1 || neigh[1] == -1 || neigh[2] == -1 || neigh[3] == -1{
-        //     fmt.Printf("Can't get neigh\n")
-        //     return
-        // }
         addtomessagehashes(hash_msg)
         if neigh[0] == -1 || neigh[1] == -1 || neigh[2] == -1 || neigh[3] == -1{
             // No neighbors, so just tell everybody
@@ -637,12 +636,7 @@ func sell_crack(){
             }
 }
 
-func main() {
-    mylog.Log_init()
-    init_()
-    go listener()
-    go monitor()
-    go heartbeatsend()
+func clearmessages() {
     for{
         message_hashes_mutex.Lock()
         mylog.Log_writeln("[main] Flushing redundancy map")
@@ -655,6 +649,77 @@ func main() {
         }
         message_hashes_mutex.Unlock()
         time.Sleep(REDUNDANCY_TABLE_CLEAR_TIME_MILLIS * time.Millisecond)
+    }
+
+}
+
+func leave() {
+    mem_table.Delete_node(int(my_node_hash), my_node_id)
+    //neigh = beatable.Reval_table(my_node_hash, mem_table)
+    fmt.Printf("New membership table:\n %s.\n", mem_table.String())
+        
+    msg := detector.Msg_t{detector.LEAVE, time.Now().UnixNano(), my_node_id, time_to_live, byte(my_node_hash)}
+    if neigh[0] == -1 || neigh[1] == -1 || neigh[2] == -1 || neigh[3] == -1{
+        // No neighbors, so just tell everybody
+        a := mem_table.Get_Hash_list()
+        for i := 0; i < len(a); i++ {
+            neighbor_id := mem_table.Get_node(a[i])
+            sendmessage(msg, neighbor_id.IPV4_addr, portNum)
+        }
+
+        return
+    }
+
+    // neigh := mem_table.Get_neigh(my_node_hash)
+    for i := 0; i < len(neigh); i++ {
+        neighbor_id := mem_table.Get_node(neigh[i])
+        sendmessage(msg, neighbor_id.IPV4_addr, portNum)
+    }
+}
+
+func join() {
+    mem_table.Add_node(int(my_node_hash), my_node_id)
+    neigh = beatable.Reval_table(my_node_hash, mem_table)
+    msg := detector.Msg_t{detector.JOIN, time.Now().UnixNano(), my_node_id, time_to_live, byte(my_node_hash)}
+    fmt.Printf("New membership table:\n %s.\n", mem_table.String())
+    if neigh[0] == -1 || neigh[1] == -1 || neigh[2] == -1 || neigh[3] == -1{
+        // No neighbors, so just tell everybody
+        a := mem_table.Get_Hash_list()
+        for i := 0; i < len(a); i++ {
+            neighbor_id := mem_table.Get_node(a[i])
+            sendmessage(msg, neighbor_id.IPV4_addr, portNum)
+        }
+        return
+    }
+
+    // neigh := mem_table.Get_neigh(my_node_hash)
+    for i := 0; i < len(neigh); i++ {
+        neighbor_id := mem_table.Get_node(neigh[i])
+        sendmessage(msg, neighbor_id.IPV4_addr, portNum)
+    }
+}
+
+func main() {
+    mylog.Log_init()
+    init_()
+    go listener()
+    go monitor()
+    go heartbeatsend()
+    go clearmessages()
+    for {
+        reader := bufio.NewReader(os.Stdin)
+        text, _ := reader.ReadString('\n')
+        strings.TrimSpace(text)
+
+        if text == "leave" {
+            mylog.Log_writeln("Leaving the network")
+            leave()
+        } else if text == "join" {
+            mylog.Log_writeln("Joining the network!")
+            join()
+        } else {
+            fmt.Print("Invalid command\n")
+        }
     }
 }
 
