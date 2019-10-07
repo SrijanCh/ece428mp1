@@ -114,7 +114,7 @@ func (t *Beat_table) Reval_table(node_hash int, mem_table memtable.Memtable) [4]
 	t.mu.Lock()
 	for i := 0; i < 4; i++{
 		if _, ok := t.table[neighbors[i]]; ok { //Node is in there
-			newtable[neighbors[i]] = t.table[i]
+			newtable[neighbors[i]] = t.table[neighbors[i]]
 		}else{
 			fmt.Printf("=============================NEW NEIGHBOR %d STARTED WITH COUNT=========================", neighbors[i])
 			if t.count == 0{
