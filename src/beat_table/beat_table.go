@@ -28,7 +28,21 @@ func (t *Beat_table) Check_num() int{
 	t.mu.Lock()
 	a = len(t.table)
 	t.mu.Unlock()
+	fmt.Printf(t.String())
 	return a
+}
+
+
+func (t *Beat_table) String() string{
+	t.mu.Lock()
+	ret := "Current Beat Table:\n"
+	temp := ""
+	for k, _ := range t.table{
+		temp = fmt.Sprintf("Hash: %d, Timestamp: %d\n", k, t.table[k])
+		ret += temp
+	}
+	t.mu.Unlock()
+	return ret
 }
 
 func (t *Beat_table) Log_beat(node_hash int, timestamp int64){
@@ -46,6 +60,8 @@ func (t *Beat_table) Log_beat(node_hash int, timestamp int64){
 	}
 
 	t.mu.Unlock()
+
+	fmt.Printf(t.String())
 }
 
 
@@ -73,6 +89,8 @@ func (t *Beat_table) Get_beat(node_hash int) int64{
 	if a == 0{
 		fmt.Printf("[Get_beat with %d]======================================RETURNING A TIMESTAMP OF ZERO=================================================\n", t.table[node_hash])
 	}
+
+	fmt.Printf(t.String())
 	return a
 }
 
@@ -103,6 +121,8 @@ func (t *Beat_table) Reval_table(node_hash int, mem_table memtable.Memtable) [4]
 	t.count = (t.count+1) % 3000
 
 	t.mu.Unlock()
+
+	fmt.Printf(t.String())
 
 	return neighbors
 }
