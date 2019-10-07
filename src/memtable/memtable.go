@@ -13,7 +13,7 @@ type Memtable struct{
 	Hash_list []int
 }
 
-
+//make a fake membership
 type FakeMemtable struct{
 	Mu sync.Mutex
 	Table map[string]detector.Node_id_t
