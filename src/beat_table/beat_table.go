@@ -138,6 +138,7 @@ func (t *Beat_table) Reval_table(node_hash int, mem_table memtable.Memtable) [4]
 	t.count = (t.count+1) % 3000
 	t.mu.Unlock()
 
+	fmt.Printf("Reval's Results: %v\n", neighbors)
 	fmt.Printf(t.String())
 
 	return neighbors
