@@ -10,6 +10,7 @@ import(
 type Beat_table struct{
 	mu sync.Mutex
 	table map[int]int64
+	count int64
 }
 
 
@@ -17,7 +18,8 @@ type Beat_table struct{
 func NewBeatTable() Beat_table{
 	var a sync.Mutex 
 	b := make(map[int]int64)
-	return Beat_table{a, b}
+	c := 0
+	return Beat_table{a, b, int64(c)}
 }
 
 
@@ -87,11 +89,13 @@ func (t *Beat_table) Reval_table(node_hash int, mem_table memtable.Memtable) [4]
 		if _, ok := t.table[neighbors[i]]; ok { //Node is in there
 			newtable[neighbors[i]] = t.table[i]
 		}else{
-			fmt.Printf("=============================NEW NEIGHBOR %d STARTED WITH 0=========================", neighbors[i])
-			newtable[neighbors[i]] = 0
+			fmt.Printf("=============================NEW NEIGHBOR %d STARTED WITH COUNT=========================", neighbors[i])
+			newtable[neighbors[i]] = t.count
 		}
 	}
 	t.table = newtable
+	t.count = (t.count+1) % 3000
+
 	t.mu.Unlock()
 
 	return neighbors
