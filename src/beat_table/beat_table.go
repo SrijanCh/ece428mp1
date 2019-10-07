@@ -16,6 +16,7 @@ type Beat_table struct{
 
 
 func NewBeatTable() Beat_table{
+	fmt.Printf("NewBeatTable----------------------------------------\n")
 	var a sync.Mutex 
 	b := make(map[int]int64)
 	c := 1
@@ -24,6 +25,7 @@ func NewBeatTable() Beat_table{
 
 
 func (t *Beat_table) Check_num() int{
+	fmt.Printf("Check_num----------------------------------------\n")
 	a := -1
 	t.mu.Lock()
 	a = len(t.table)
@@ -46,6 +48,7 @@ func (t *Beat_table) String() string{
 }
 
 func (t *Beat_table) Log_beat(node_hash int, timestamp int64){
+	fmt.Printf("Log_beat----------------------------------------\n")
 	if timestamp == 0{
 		fmt.Printf("===========================================LOGGING A TIMESTAMP OF ZERO========================================================\n")
 	}
@@ -66,6 +69,7 @@ func (t *Beat_table) Log_beat(node_hash int, timestamp int64){
 
 
 func (t *Beat_table) Add_entry(node_hash int){
+	fmt.Printf("Add_entry----------------------------------------\n")
 	t.mu.Lock()
 
 	if _, ok := t.table[node_hash]; !ok { //Node is not there
@@ -78,6 +82,7 @@ func (t *Beat_table) Add_entry(node_hash int){
 }
 
 func (t *Beat_table) Get_beat(node_hash int) int64{
+	fmt.Printf("Get_beat----------------------------------------\n")
 	var a int64 = -1
 	t.mu.Lock()
 	if _, ok := t.table[node_hash]; ok { //Node is in there
@@ -96,6 +101,7 @@ func (t *Beat_table) Get_beat(node_hash int) int64{
 
 //Builds a table with new neighbors; 0 is timestamp assigned if not carried over, 
 func (t *Beat_table) Reval_table(node_hash int, mem_table memtable.Memtable) [4]int{
+	fmt.Printf("Reval_table----------------------------------------\n")
 	var neighbors [4]int = mem_table.Get_neighbors(node_hash)
 	
 	if neighbors[0] == -1 || neighbors[1] == -1 || neighbors[2] == -1 || neighbors[3] == -1{
