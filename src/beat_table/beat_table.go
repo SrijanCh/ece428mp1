@@ -68,7 +68,7 @@ func (t *Beat_table) Get_beat(node_hash int) int64{
 	}
 	t.mu.Unlock()
 	if a == 0{
-		fmt.Printf("[Get_beat with %d]===========================================RETURNING A TIMESTAMP OF ZERO========================================================\n")
+		fmt.Printf("[Get_beat with %d]======================================RETURNING A TIMESTAMP OF ZERO=================================================\n", t.table[node_hash])
 	}
 	return a
 }
@@ -87,6 +87,7 @@ func (t *Beat_table) Reval_table(node_hash int, mem_table memtable.Memtable) [4]
 		if _, ok := t.table[neighbors[i]]; ok { //Node is in there
 			newtable[neighbors[i]] = t.table[i]
 		}else{
+			fmt.Printf("=============================NEW NEIGHBOR %d STARTED WITH 0=========================", neighbors[i])
 			newtable[neighbors[i]] = 0
 		}
 	}
