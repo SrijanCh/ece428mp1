@@ -109,35 +109,95 @@ func (t *Beat_table) Reval_table(node_hash int, mem_table memtable.Memtable) [4]
 		return neighbors
 	}
 
+	fmt.Printf("1. Making new temporary map\n")
 	var newtable map[int]int64 = make(map[int]int64)
+	for k, v := range newtable{
+		fmt.Printf("Value %d, %d\n", k, v)
+	}
 
 	t.mu.Lock()
 	for i := 0; i < 4; i++{
+		fmt.Printf("2. Looping through neighbors and checking/transferring values; neighbors: %v, i: %d", neighbors, i)
+		for k, v := range newtable{
+			fmt.Printf("Value %d, %d\n", k, v)
+		}
+		fmt.Printf(t.String())
+
 		if _, ok := t.table[neighbors[i]]; ok { //Node is in there
+			fmt.Printf("3. Node at %d already in here, transfer value %d", neighbors[i], t.table[i])
+			fmt.Printf("Before:\n")
+			for k, v := range newtable{
+				fmt.Printf("Value %d, %d\n", k, v)
+			}
+			fmt.Printf(t.String())
+
 			newtable[neighbors[i]] = t.table[i]
+			
+			fmt.Printf("After:\n")
+			for k, v := range newtable{
+				fmt.Printf("Value %d, %d\n", k, v)
+			}
+			fmt.Printf(t.String())
 		}else{
-			fmt.Printf("=============================NEW NEIGHBOR %d STARTED WITH COUNT=========================", neighbors[i])
 			if t.count == 0{
 				t.count = 1
 			}
+			fmt.Printf("3.============================NEW NEIGHBOR %d STARTED WITH COUNT %d=========================", neighbors[i], t.count)
+			fmt.Printf("Before:\n")
+			for k, v := range newtable{
+				fmt.Printf("Value %d, %d\n", k, v)
+			}
+			fmt.Printf(t.String())
+
 			newtable[neighbors[i]] = t.count
+
+			fmt.Printf("After:\n")
+			for k, v := range newtable{
+				fmt.Printf("Value %d, %d\n", k, v)
+			}
+			fmt.Printf(t.String())
 		}
 	}
 	// t.table = newtable
 
 	//Clear the map
+			fmt.Printf("4. Clear our old map\n")
+			fmt.Printf("Before:\n")
+			for k, v := range newtable{
+				fmt.Printf("Value %d, %d\n", k, v)
+			}
+			fmt.Printf(t.String())
 	for k,_ := range t.table{
 		delete(t.table, k)
 	}
+			fmt.Printf("After:\n")
+			for k, v := range newtable{
+				fmt.Printf("Value %d, %d\n", k, v)
+			}
+			fmt.Printf(t.String())
 
 	//Copy in the new table
+
+			fmt.Printf("5. Copy into our map\n")
+			fmt.Printf("Before:\n")
+			for k, v := range newtable{
+				fmt.Printf("Value %d, %d\n", k, v)
+			}
+			fmt.Printf(t.String())
 	for k,v := range newtable{
+			fmt.Printf("Copying %d to %d\n", v, k)
 		t.table[k] = v
 	}
+			fmt.Printf("After:\n")
+			for k, v := range newtable{
+				fmt.Printf("Value %d, %d\n", k, v)
+			}
+			fmt.Printf(t.String())
 
 	t.count = (t.count+1) % 3000
 	t.mu.Unlock()
 
+			fmt.Printf("Result:\n")
 	fmt.Printf(t.String())
 
 	return neighbors
