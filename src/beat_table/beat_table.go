@@ -101,7 +101,7 @@ func (t *Beat_table) Get_beat(node_hash int) int64{
 
 //Builds a table with new neighbors; 0 is timestamp assigned if not carried over, 
 func (t *Beat_table) Reval_table(node_hash int, mem_table memtable.Memtable) [4]int{
-	// fmt.Printf("Reval_table----------------------------------------\n")
+	fmt.Printf("Reval_table----------------------------------------\n")
 	var neighbors [4]int = mem_table.Get_neighbors(node_hash)
 	
 	if neighbors[0] == -1 || neighbors[1] == -1 || neighbors[2] == -1 || neighbors[3] == -1{
