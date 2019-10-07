@@ -710,6 +710,7 @@ func main() {
         reader := bufio.NewReader(os.Stdin)
         text, _ := reader.ReadString('\n')
         strings.TrimSpace(text)
+        strings.TrimRight(text, "\n")
         fmt.Printf("Input = %s\n", text)
         if text == "leave" {
             mylog.Log_writeln("Leaving the network")
