@@ -123,9 +123,19 @@ func (t *Beat_table) Reval_table(node_hash int, mem_table memtable.Memtable) [4]
 			newtable[neighbors[i]] = t.count
 		}
 	}
-	t.table = newtable
-	t.count = (t.count+1) % 3000
+	// t.table = newtable
 
+	//Clear the map
+	for k,_ := range t.table{
+		delete(t.table, k)
+	}
+
+	//Copy in the new table
+	for k,v := range newtable{
+		t.table[k] = v
+	}
+
+	t.count = (t.count+1) % 3000
 	t.mu.Unlock()
 
 	fmt.Printf(t.String())
