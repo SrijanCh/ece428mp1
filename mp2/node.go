@@ -595,7 +595,7 @@ func join_cluster(node_id detector.Node_id_t) IntroMsg{
 
 func heartbeatsend() {
         for {
-            neigh = beatable.Reval_table(my_node_hash, mem_table)
+            // neigh = beatable.Reval_table(my_node_hash, mem_table)
 
             if neigh[0] == -1 || neigh[1] == -1 || neigh[2] == -1 || neigh[3] == -1{
                 // fmt.Printf("heartbeatsend: Can't get neigh\n")
