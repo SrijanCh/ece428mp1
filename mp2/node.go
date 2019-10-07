@@ -278,7 +278,7 @@ func handlejoinmsg(msg detector.Msg_t) {
     }
 }
 
-//TODO
+
 func handleheartbeatmsg(msg detector.Msg_t) {
     fmt.Printf("Heartbeat from %s_%d at %d with Timestamp %d received (our current neigh is %v).\n", msg.Node_id.IPV4_addr, 
                                                     msg.Node_id.Timestamp, msg.Node_hash, msg.Timestamp, neigh)
@@ -356,7 +356,6 @@ func handleleavemsg(msg detector.Msg_t) {
 
             return
         }
-
 
         if msg.Time_to_live <= 0 {
             return
@@ -456,6 +455,8 @@ func monitor(){
         for i:=0; i < len(fails); i++{
             declare_fail(fails[i])
         }
+
+        fails = []int{}
     }
 }
 
