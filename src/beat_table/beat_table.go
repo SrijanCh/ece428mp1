@@ -16,7 +16,7 @@ type Beat_table struct{
 
 
 func NewBeatTable() Beat_table{
-	fmt.Printf("NewBeatTable----------------------------------------\n")
+	// fmt.Printf("NewBeatTable----------------------------------------\n")
 	var a sync.Mutex 
 	b := make(map[int]int64)
 	c := 1
@@ -25,12 +25,12 @@ func NewBeatTable() Beat_table{
 
 
 func (t *Beat_table) Check_num() int{
-	fmt.Printf("Check_num----------------------------------------\n")
+	// fmt.Printf("Check_num----------------------------------------\n")
 	a := -1
 	t.mu.Lock()
 	a = len(t.table)
 	t.mu.Unlock()
-	fmt.Printf(t.String())
+	// fmt.Printf(t.String())
 	return a
 }
 
@@ -48,7 +48,7 @@ func (t *Beat_table) String() string{
 }
 
 func (t *Beat_table) Log_beat(node_hash int, timestamp int64){
-	fmt.Printf("Log_beat----------------------------------------\n")
+	// fmt.Printf("Log_beat----------------------------------------\n")
 	if timestamp == 0{
 		fmt.Printf("===========================================LOGGING A TIMESTAMP OF ZERO========================================================\n")
 	}
@@ -64,12 +64,12 @@ func (t *Beat_table) Log_beat(node_hash int, timestamp int64){
 
 	t.mu.Unlock()
 
-	fmt.Printf(t.String())
+	// fmt.Printf(t.String())
 }
 
 
 func (t *Beat_table) Add_entry(node_hash int){
-	fmt.Printf("Add_entry----------------------------------------\n")
+	// fmt.Printf("Add_entry----------------------------------------\n")
 	t.mu.Lock()
 
 	if _, ok := t.table[node_hash]; !ok { //Node is not there
@@ -82,7 +82,7 @@ func (t *Beat_table) Add_entry(node_hash int){
 }
 
 func (t *Beat_table) Get_beat(node_hash int) int64{
-	fmt.Printf("Get_beat----------------------------------------\n")
+	// fmt.Printf("Get_beat----------------------------------------\n")
 	var a int64 = -1
 	t.mu.Lock()
 	if _, ok := t.table[node_hash]; ok { //Node is in there
@@ -92,10 +92,10 @@ func (t *Beat_table) Get_beat(node_hash int) int64{
 	}
 	t.mu.Unlock()
 	if a == 0{
-		fmt.Printf("[Get_beat with %d]======================================RETURNING A TIMESTAMP OF ZERO=================================================\n", t.table[node_hash])
+		// fmt.Printf("[Get_beat with %d]======================================RETURNING A TIMESTAMP OF ZERO=================================================\n", t.table[node_hash])
 	}
 
-	fmt.Printf(t.String())
+	// fmt.Printf(t.String())
 	return a
 }
 
@@ -116,7 +116,7 @@ func (t *Beat_table) Reval_table(node_hash int, mem_table memtable.Memtable) [4]
 		if _, ok := t.table[neighbors[i]]; ok { //Node is in there
 			newtable[neighbors[i]] = t.table[neighbors[i]]
 		}else{
-			fmt.Printf("=============================NEW NEIGHBOR %d STARTED WITH COUNT=========================", neighbors[i])
+			// fmt.Printf("=============================NEW NEIGHBOR %d STARTED WITH COUNT=========================", neighbors[i])
 			if t.count == 0{
 				t.count = 1
 			}
@@ -138,8 +138,8 @@ func (t *Beat_table) Reval_table(node_hash int, mem_table memtable.Memtable) [4]
 	t.count = (t.count+1) % 3000
 	t.mu.Unlock()
 
-	fmt.Printf("Reval's Results: %v\n", neighbors)
-	fmt.Printf(t.String())
+	// fmt.Printf("Reval's Results: %v\n", neighbors)
+	// fmt.Printf(t.String())
 
 	return neighbors
 }
