@@ -32,6 +32,7 @@ var my_node_hash = -1               //Our hash in the ring
 var message_hashes_mutex = &sync.Mutex{}    //Synchronization for the old message buffer
 var message_hashes = make(map[int]int64)    //Map to hold message record
 var mem_table memtable.Memtable = memtable.NewMemtable()    //The membership table
+var start_time time.Time
 
 //Beat Table
 var beatable beat_table.Beat_table = beat_table.NewBeatTable()
@@ -495,7 +496,7 @@ func monitor(){
 
 //Declare a node as failed; delete it from our list and begin dissemination
 func declare_fail(node_hash int){
-    fmt.Printf("~~~~~~~~~~~~FAILURE OF %s_%d AT %d DETECTED~~~~~~~~~~~.\n", mem_table.Get_node(node_hash).IPV4_addr, mem_table.Get_node(node_hash).Timestamp, node_hash)
+    fmt.Printf("~~~~~~~~~~~~FAILURE OF %s_%d AT %d DETECTED AT %d~~~~~~~~~~~.\n", mem_table.Get_node(node_hash).IPV4_addr, mem_table.Get_node(node_hash).Timestamp, node_hash, time.Now().Second() - start_time.Second())
 
     // Hold the IP for reporting
     a := mem_table.Get_node(node_hash)
@@ -739,6 +740,7 @@ func join() {
 
 func main() {
     mylog.Log_init()
+    start_time = time.Now()
     init_()         //Init ourselvers
     go listener()   //Start a Listener thread
     go monitor()    //Start our monitor
