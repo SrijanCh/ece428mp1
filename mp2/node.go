@@ -58,6 +58,7 @@ const drop_rate = 0.30
 // Funtion to send a UDP message msg_struct to a node with the IP ip_raw, on port portNum 
 func sendmessage(msg_struct detector.Msg_t, ip_raw net.IP, portNum string) {
     b := rand.Float64()
+    fmt.Printf("RAND IS %d\n", b)
     if (b < 0.3){
 
     
@@ -494,6 +495,10 @@ func monitor(){
     }
 }
 
+//Numbers
+// 2 nodes 3% == never
+// 2 nodes 10% == 92, 81, 65, 110, 120
+// 2 nodes 30% == 
 //Declare a node as failed; delete it from our list and begin dissemination
 func declare_fail(node_hash int){
     fmt.Printf("~~~~~~~~~~~~FAILURE OF %s_%d AT %d DETECTED AT %d~~~~~~~~~~~.\n", mem_table.Get_node(node_hash).IPV4_addr, mem_table.Get_node(node_hash).Timestamp, node_hash, time.Now().Second() - start_time.Second())
