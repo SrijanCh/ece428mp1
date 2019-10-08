@@ -15,6 +15,7 @@ import (
     "strconv"
     "bufio"
     "os"
+    "math/rand"
 )
 
 /* Struct specifically for information given to nodes as an introduction*/
@@ -51,8 +52,14 @@ const REDUNDANCY_TABLE_CLEAR_TIME_MILLIS = 6000 // in milliseconds
 const HEARTBEAT_INTERVAL_MILLIS = 1000 // in milliseconds
 const MONITOR_PERIOD_MILLIS = 3000
 
+const drop_rate = 0.30
+
 // Funtion to send a UDP message msg_struct to a node with the IP ip_raw, on port portNum 
 func sendmessage(msg_struct detector.Msg_t, ip_raw net.IP, portNum string) {
+    b := rand.Float64()
+    if (b < 0.3){
+
+    
     //Marshall the message
     msg, err := json.Marshal(msg_struct)
     if err != nil {
@@ -85,6 +92,8 @@ func sendmessage(msg_struct detector.Msg_t, ip_raw net.IP, portNum string) {
     if err != nil {
         fmt.Printf("%s\n", err.Error())
         // log.Fatal(err)
+    }
+
     }
 }
 
