@@ -59,7 +59,7 @@ const drop_rate = 0.30
 func sendmessage(msg_struct detector.Msg_t, ip_raw net.IP, portNum string) {
     b := rand.Float64()
     fmt.Printf("RAND IS %d\n", b)
-    if (b < 0.3){
+    if (b < 0.027){
 
     
     //Marshall the message
