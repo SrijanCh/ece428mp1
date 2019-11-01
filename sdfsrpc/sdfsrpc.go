@@ -170,7 +170,7 @@ func (t *Sdfsrpc) Replicate_to(args Rep_args, reply *int) error {
 			return err
 		}
 
-		fmt.Printf("Calling RPC...\n")
+		fmt.Printf("Calling RPC (%s:%s)...\n", args.Ip, args.Port)
 		client, err := rpc.DialHTTP("tcp", args.Ip + ":" + args.Port) //Connect to given address
 		if err != nil {
 			log.Fatal(err)
