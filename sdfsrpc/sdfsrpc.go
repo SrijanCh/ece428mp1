@@ -152,6 +152,7 @@ func (t *Sdfsrpc) Replicate_to(args Rep_args, reply *int) error {
 		return nil
 	}else{
 		//File I/O way to do it
+		fmt.Printf("Have file! opening...\n")
 		file, err := os.Open(args.Sdfsname)
 		if(err != nil){
 			fmt.Printf("File open error: %s\n", args.Sdfsname)
@@ -159,7 +160,8 @@ func (t *Sdfsrpc) Replicate_to(args Rep_args, reply *int) error {
 			return err
 		}
 
-		defer file.Close()
+		defer file.Close()		
+		fmt.Printf("Reading all data...\n")
     	Data_r, err := ioutil.ReadAll(file)
 
 		if(err != nil){
@@ -168,6 +170,7 @@ func (t *Sdfsrpc) Replicate_to(args Rep_args, reply *int) error {
 			return err
 		}
 
+		fmt.Printf("Calling RPC...\n")
 		client, err := rpc.DialHTTP("tcp", args.Ip + ":" + args.Port) //Connect to given address
 		if err != nil {
 			log.Fatal(err)
