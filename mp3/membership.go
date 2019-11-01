@@ -171,7 +171,7 @@ func checkSuspicion(vid int) {
 	for i, suspect := range(suspects) {
 		if suspect == vid {
 			suspect_idx = i
-			memberMap[suspect].alive = false
+			memberMap[suspect].alive = false //[W]
 			_, ok := children[vid]
 			if ok {
 				delete(children, vid)
@@ -462,7 +462,7 @@ func completeJoinRequests() (err error) {
 		newnode.ip = addr.IP.String()
 		newnode.timestamp = time.Now().Unix()
 		newnode.alive = true
-		memberMap[newVid] = &newnode
+		memberMap[newVid] = &newnode //[W]
 
 		log.Printf("[ME %d] Added entry ip=%s timestamp=%d at vid=%d", myVid, newnode.ip, newnode.timestamp, newVid)
 
@@ -651,7 +651,7 @@ func listenOtherPort() (err error) {
 		case "ADD":
 			var newnode MemberNode
 			newnode = createMember(split_message[2], split_message[3])
-			memberMap[subject] = &newnode
+			memberMap[subject] = &newnode //[W]
 
 			var cnode ChildNode
 			cnode.timestamp = time.Now().Unix()
@@ -672,7 +672,7 @@ func listenOtherPort() (err error) {
 				// Listen to atleast 4 different nodes than myself - to handle three simultaneous failures
 				if len(memberMap) < 5 {
 					newnode := createMember(split_message[2],split_message[3])
-					memberMap[subject] = &newnode
+					memberMap[subject] = &newnode //[W]
 
 					tempmax, _ := strconv.Atoi(split_message[4])
 					maxID = max(maxID, tempmax)
@@ -690,7 +690,7 @@ func listenOtherPort() (err error) {
 		case "PRED", "SUCC1", "SUCC2":
 			var newnode MemberNode
 			newnode = createMember(split_message[2], split_message[3])
-			memberMap[subject] = &newnode
+			memberMap[subject] = &newnode //[W]
 
 			var node MonitorNode
 			node = createMonitor(subject)
@@ -714,7 +714,7 @@ func listenOtherPort() (err error) {
 			myVid = subject
 			var newnode MemberNode
 			newnode = createMember(split_message[2], split_message[3])
-			memberMap[subject] = &newnode
+			memberMap[subject] = &newnode //[W]
 
 			go checkIntroducer()
 
@@ -725,7 +725,7 @@ func listenOtherPort() (err error) {
 				break
 			}
 			newnode := createMember(split_message[2], split_message[3])
-			memberMap[subject] = &newnode
+			memberMap[subject] = &newnode //[W]
 
 			if subject != 0 {
 				updateMonitors()
@@ -744,7 +744,7 @@ func listenOtherPort() (err error) {
 
 				if subject != myVid {
 					newnode := createMember(split_message[2], split_message[3])
-					memberMap[subject] = &newnode
+					memberMap[subject] = &newnode //[W]
 				}
 
 				message := fmt.Sprintf("MEMBER,%d,%s,%d", myVid, myIP, memberMap[myVid].timestamp)
@@ -767,7 +767,7 @@ func listenOtherPort() (err error) {
 
 				_, ok := memberMap[subject]
 				if ok {
-					memberMap[subject].alive = false
+					memberMap[subject].alive = false //[W]
 					
 					_, ok = children[subject]
 					if ok {
@@ -904,7 +904,7 @@ func main() {
 		node.ip = myIP
 		node.timestamp = time.Now().Unix()
 		node.alive = true
-		memberMap[0] = &node
+		memberMap[0] = &node //[W]
 	}
 
 	go sendHeartbeat()
