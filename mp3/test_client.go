@@ -34,13 +34,14 @@ func main(){
 	// 	return 2
 	// }
 
-	write("testfile", "abcdefg", "127.0.0.1", "3074")
-	var a sdfsrpc.Read_reply = read("testfile", "127.0.0.1", "3074")
+	write("testfile", "abcdefg", "172.22.154.255", "3074")
+	var a sdfsrpc.Read_reply = read("testfile", "172.22.154.255", "3074")
 	fmt.Printf("Read %s with Timestamp %d\n", a.Data, a.Timestamp)
-	write("testfile", "NEW DATA\n", "127.0.0.1", "3074")
-	a = read("testfile", "127.0.0.1", "3074")
+	write("testfile", "NEW DATA\n", "172.22.154.255", "3074")
+	a = read("testfile", "172.22.154.255", "3074")
 	fmt.Printf("Read %s with Timestamp %d\n", a.Data, a.Timestamp)
-	delete("testfile", "127.0.0.1", "3074")
+	// delete("testfile", "172.22.154.255", "3074")
+	rep_to("testfile", "192.168.56.1", "3074", "172.22.154.255", "3074")
 }
 
 func write(filename, data, ip, port string) int{
@@ -99,4 +100,15 @@ func get_store(ip, port string) string{
 	var store_list string
 	_ = client.Call("Sdfsrpc.Get_store", args, &store_list) //Make the remote call	
 	return store_list
+}
+
+func rep_to(filename, ipto, portto, ip, port string) int{
+	client, err := rpc.DialHTTP("tcp", ip + ":" + port) //Connect to given address
+	if err != nil {
+		log.Fatal(err)
+	}
+	var args = sdfsrpc.Rep_args{filename, ipto, portto}
+	var retval int
+	_ = client.Call("Sdfsrpc.Replicate_to", args, &retval) //Make the remote call	
+	return retval
 }

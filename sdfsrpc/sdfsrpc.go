@@ -145,6 +145,7 @@ type Rep_args struct{
 }
 
 func (t *Sdfsrpc) Replicate_to(args Rep_args, reply *int) error {
+		fmt.Printf("Replicate_to %s, %s, %s\n", args.Sdfsname, args.Ip, args.Port)
 	if _, ok := Filemap[args.Sdfsname]; !ok {
 		fmt.Printf("We don't have file\n")
 		(*reply) = 0
@@ -171,6 +172,9 @@ func (t *Sdfsrpc) Replicate_to(args Rep_args, reply *int) error {
 		if err != nil {
 			log.Fatal(err)
 		}
+
+		fmt.Printf("Replicating %s to address %s:%s\n", args.Sdfsname, args.Ip, args.Port)
+
 		// Synchronous call***************************************
 		var args = Write_args{Sdfsname: args.Sdfsname, Data: string(Data_r), Timestamp: int64(time.Now().Nanosecond())} //Create the args gob to send over to the RPC
 		var reply int //Create a container for our results
