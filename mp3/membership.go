@@ -15,34 +15,41 @@ import (
     "syscall"
     "log"
     "io"
-    "zookeeper"
+	"sdfsrpc"
+  	// "math/rand"
+  	// "time"
+  	// "fmt"
+	"net/rpc"
+	"net/http"
 )
 
-// type zookeeper.MemberNode struct {
-// 	Ip string
-// 	Timestamp int64
-// 	Alive bool
-// }
+type MemberNode struct {
+	ip string
+	timestamp int64
+	alive bool
+}
 
 type MonitorNode struct {
 	conn *net.UDPConn
-	Ip string
+	ip string
 	vid int
 }
 
 type ChildNode struct {
-	Timestamp int64
+	timestamp int64
 }
 
 var introducer = "172.22.154.255"
 var introducerPort = 8082
 var introPingPeriod = 5
 
+var zoo_ip = "172.22.154.255"
+
 var myVid int
 var otherPort = 8081
 var myIP string
 
-// var zookeeper.MemberMap = make(map[int]*zookeeper.MemberNode)
+var memberMap = make(map[int]*MemberNode)
 var monitors = make(map[string]*MonitorNode)
 var children = make(map[int]*ChildNode)
 
@@ -54,7 +61,7 @@ var heartbeatPort = 8080
 var heartbeatPeriod int64 = 1
 var suspects []int 
 
-// var garbage = make(map[int]bool)
+var garbage = make(map[int]bool)
 
 var maxID = 0
 var delimiter = ","
@@ -107,18 +114,18 @@ func receiveHeartbeat() {
 		// Check if the sender vid is in your children map
 		_, ok := children[child_vid]
 		if ok {
-			children[child_vid].Timestamp = time.Now().Unix()
-			// log.Printf("[HEARTBEAT %d] Received heartbeat from child vid=%d, Ip=%s\n", myVid, child_vid, addr.IP.String())
+			children[child_vid].timestamp = time.Now().Unix()
+			// log.Printf("[HEARTBEAT %d] Received heartbeat from child vid=%d, ip=%s\n", myVid, child_vid, addr.IP.String())
 		} else{
-			log.Printf("Received a non-child heartbeat from vid=%d, Ip=%s", child_vid, addr.IP.String())
+			log.Printf("Received a non-child heartbeat from vid=%d, ip=%s", child_vid, addr.IP.String())
 
 		}
 	}
 }
 
 func printMembershipList() {
-	log.Printf("My zookeeper: [")
-	for id := range(zookeeper.MemberMap) {
+	log.Printf("My members: [")
+	for id := range(memberMap) {
 		log.Printf("%d ", id)
 	}
 	log.Printf("]\n")
@@ -137,7 +144,7 @@ func checkChildren() {
 		currTime := time.Now().Unix()
 
 		for child_vid, cnode := range children {
-			if currTime - cnode.Timestamp > 2 * heartbeatPeriod {
+			if currTime - cnode.timestamp > 2 * heartbeatPeriod {
 				log.Printf("[ME %d] No heartbeat from %d since two heartbeat periods", myVid, child_vid)
 				suspects = append(suspects, child_vid)
 				go checkSuspicion(child_vid)
@@ -172,7 +179,7 @@ func checkSuspicion(vid int) {
 	for i, suspect := range(suspects) {
 		if suspect == vid {
 			suspect_idx = i
-			zookeeper.MemberMap[suspect].Alive = false //[W]
+			memberMap[suspect].alive = false
 			_, ok := children[vid]
 			if ok {
 				delete(children, vid)
@@ -197,12 +204,12 @@ func checkSuspicion(vid int) {
 
 func sendMessage(vid int, message string, num_tries int) {
 	var addr net.UDPAddr
-	addr.IP = net.ParseIP(zookeeper.MemberMap[vid].Ip)
+	addr.IP = net.ParseIP(memberMap[vid].ip)
 	addr.Port = otherPort
 
 	conn, err := net.DialUDP("udp", nil, &addr)
 	if err != nil {
-		log.Printf("[ME %d] Unable to dial UDP to vid=%d Ip=%s", myVid, vid, zookeeper.MemberMap[vid].Ip)
+		log.Printf("[ME %d] Unable to dial UDP to vid=%d ip=%s", myVid, vid, memberMap[vid].ip)
 	}
 	defer conn.Close()
 	for i:=0; i<num_tries; i++ {
@@ -218,24 +225,24 @@ func sendMessage(vid int, message string, num_tries int) {
 	return
 }
 
-func sendMessageAddr(Ip string, message string, num_tries int) {
+func sendMessageAddr(ip string, message string, num_tries int) {
 	var addr net.UDPAddr
-	addr.IP = net.ParseIP(Ip)
+	addr.IP = net.ParseIP(ip)
 	addr.Port = otherPort
 
 	conn, err := net.DialUDP("udp", nil, &addr)
 	if err != nil {
-		log.Printf("[ME %d] Unable to dial UDP to Ip=%s", myVid, Ip)
+		log.Printf("[ME %d] Unable to dial UDP to ip=%s", myVid, ip)
 	}
 	defer conn.Close()
 	for i:=0; i<num_tries; i++ {
 		if rand.Float64() > packetDropProb {
 			_, err = conn.Write([]byte(message))
 			if err != nil {
-				log.Printf("[ME %d] Unable to write message %s on the connection to Ip=%s", myVid, message, Ip)
+				log.Printf("[ME %d] Unable to write message %s on the connection to ip=%s", myVid, message, ip)
 			}
 		} else {
-			log.Printf("[ME %d] Dropped the message %s to Ip=%s", myVid, message, Ip)
+			log.Printf("[ME %d] Dropped the message %s to ip=%s", myVid, message, ip)
 		}
 	}
 	return
@@ -267,8 +274,8 @@ func getPredecessor(vid int) (int) {
 	pred := mod(vid - 1, n)
 	attempts := 0
 	for {
-		_, ok := zookeeper.MemberMap[pred]
-		if ok && zookeeper.MemberMap[pred].Alive == true {
+		_, ok := memberMap[pred]
+		if ok && memberMap[pred].alive == true {
 			if pred != vid {
 				break
 			}
@@ -290,8 +297,8 @@ func getSuccessor(vid int) (int) {
 	succ := (vid + 1) % n
 	attempts := 0
 	for {
-		_, ok := zookeeper.MemberMap[succ] // checking if succ is in the zookeeper.MemberMap
-		if ok && zookeeper.MemberMap[succ].Alive == true {
+		_, ok := memberMap[succ] // checking if succ is in the memberMap
+		if ok && memberMap[succ].alive == true {
 			if succ != vid {
 				break
 			}
@@ -319,8 +326,8 @@ func getSuccessor2(vid int) (int) {
 	succ2 := (succ1 + 1) % n
 	attempts := 0
 	for {
-		_, ok := zookeeper.MemberMap[succ2]
-		if ok && zookeeper.MemberMap[succ2].Alive == true {
+		_, ok := memberMap[succ2]
+		if ok && memberMap[succ2].alive == true {
 			if succ2 != vid {
 				break
 			}
@@ -380,7 +387,7 @@ func disseminate(message string) {
 		sendMessage(node.vid, message, 1)
 	}
 	for _, finger := range(fingerTable) {
-		if (finger == myVid || zookeeper.MemberMap[finger].Alive == false) {
+		if (finger == myVid || memberMap[finger].alive == false) {
 			continue
 		}
 		sendMessage(finger, message, 1)
@@ -391,9 +398,9 @@ func disseminate(message string) {
 func checkIntroducer() {
 	for {
 		time.Sleep(time.Duration(introPingPeriod) * time.Second)
-		if zookeeper.MemberMap[0].Alive == false {
+		if memberMap[0].alive == false {
 			// If introducer is dead, periodically send your record to the introducer
-			message := fmt.Sprintf("INTRODUCER,%d,%s,%d,%d",myVid,zookeeper.MemberMap[myVid].Ip,zookeeper.MemberMap[myVid].Timestamp,maxID)
+			message := fmt.Sprintf("INTRODUCER,%d,%s,%d,%d",myVid,memberMap[myVid].ip,memberMap[myVid].timestamp,maxID)
 			sendMessage(0, message, num_tries)
 		}
 	
@@ -405,19 +412,19 @@ func findAndSendMonitors(vid int) {
 
 	pred = getPredecessor(vid)
 	if pred != -1{
-		message := fmt.Sprintf("PRED,%d,%s,%d", pred, zookeeper.MemberMap[pred].Ip, zookeeper.MemberMap[pred].Timestamp)
+		message := fmt.Sprintf("PRED,%d,%s,%d", pred, memberMap[pred].ip, memberMap[pred].timestamp)
 		sendMessage(vid, message, num_tries)
 	}
 	
 	succ1 = getSuccessor(vid)
 	if succ1 != -1 {
-		message := fmt.Sprintf("SUCC1,%d,%s,%d", succ1, zookeeper.MemberMap[succ1].Ip, zookeeper.MemberMap[succ1].Timestamp)
+		message := fmt.Sprintf("SUCC1,%d,%s,%d", succ1, memberMap[succ1].ip, memberMap[succ1].timestamp)
 		sendMessage(vid, message, num_tries)
 	}
 	
 	succ2 = getSuccessor2(vid)
 	if succ2 != -1 {
-		message := fmt.Sprintf("SUCC2,%d,%s,%d", succ2, zookeeper.MemberMap[succ2].Ip, zookeeper.MemberMap[succ2].Timestamp)
+		message := fmt.Sprintf("SUCC2,%d,%s,%d", succ2, memberMap[succ2].ip, memberMap[succ2].timestamp)
 		sendMessage(vid, message, num_tries)
 	}
 	
@@ -444,35 +451,35 @@ func completeJoinRequests() (err error) {
 			log.Printf("[ME %d] Could not read message from the introducer port %d", myVid, introducerPort)
 		}
 
-		log.Printf("[ME %d] Received a JOIN request from Ip=%s", myVid, addr.IP.String())
+		log.Printf("[ME %d] Received a JOIN request from ip=%s", myVid, addr.IP.String())
 
 		var newVid int
 
-		if len(zookeeper.Garbage) == 0 {
+		if len(garbage) == 0 {
 			maxID = maxID + 1
 			newVid = maxID
 		} else {
-			for key := range(zookeeper.Garbage) {
+			for key := range(garbage) {
 				newVid = key
 				break
 			}
-			delete(zookeeper.Garbage, newVid)
+			delete(garbage, newVid)
 		}
 
-		var newnode zookeeper.MemberNode
-		newnode.Ip = addr.IP.String()
-		newnode.Timestamp = time.Now().Unix()
-		newnode.Alive = true
-		zookeeper.MemberMap[newVid] = &newnode //[W]
+		var newnode MemberNode
+		newnode.ip = addr.IP.String()
+		newnode.timestamp = time.Now().Unix()
+		newnode.alive = true
+		memberMap[newVid] = &newnode
 
-		log.Printf("[ME %d] Added entry Ip=%s Timestamp=%d at vid=%d", myVid, newnode.Ip, newnode.Timestamp, newVid)
+		log.Printf("[ME %d] Added entry ip=%s timestamp=%d at vid=%d", myVid, newnode.ip, newnode.timestamp, newVid)
 
 		// Send the node's record
-		message := fmt.Sprintf("YOU,%d,%s,%d", newVid, newnode.Ip, newnode.Timestamp)
+		message := fmt.Sprintf("YOU,%d,%s,%d", newVid, newnode.ip, newnode.timestamp)
 		sendMessage(newVid, message, num_tries)
 
 		// Send introducer record
-		message = fmt.Sprintf("MEMBER,0,%s,%d", introducer, zookeeper.MemberMap[0].Timestamp)
+		message = fmt.Sprintf("MEMBER,0,%s,%d", introducer, memberMap[0].timestamp)
 		sendMessage(newVid, message, num_tries)
 
 		findAndSendMonitors(newVid)
@@ -480,8 +487,8 @@ func completeJoinRequests() (err error) {
 		// this delay is essential, otherwise it will be bombarded with MEMBER messages even before init setup
 		time.Sleep(100 * time.Millisecond)
 
-		message = fmt.Sprintf("JOIN,%d,%s,%d", newVid, newnode.Ip, newnode.Timestamp)
-		eventTimeMap[newVid] = newnode.Timestamp
+		message = fmt.Sprintf("JOIN,%d,%s,%d", newVid, newnode.ip, newnode.timestamp)
+		eventTimeMap[newVid] = newnode.timestamp
 		disseminate(message)
 
 		updateMonitors()
@@ -492,10 +499,10 @@ func completeJoinRequests() (err error) {
 func createMonitor(vid int) (MonitorNode) {
 	var node MonitorNode
 	node.vid = vid
-	node.Ip = zookeeper.MemberMap[vid].Ip
+	node.ip = memberMap[vid].ip
 
 	var addr net.UDPAddr
-	addr.IP = net.ParseIP(node.Ip)
+	addr.IP = net.ParseIP(node.ip)
 	addr.Port = heartbeatPort
 	var err error
 	node.conn, err = net.DialUDP("udp", nil, &addr)
@@ -505,15 +512,15 @@ func createMonitor(vid int) (MonitorNode) {
 	return node
 }
 
-func createMember(Ip string, str_Timestamp string) (zookeeper.MemberNode){
-	var node zookeeper.MemberNode
-	node.Ip = Ip
+func createMember(ip string, str_timestamp string) (MemberNode){
+	var node MemberNode
+	node.ip = ip
 	var err error
-	node.Timestamp, err = strconv.ParseInt(string(str_Timestamp), 10, 64)
+	node.timestamp, err = strconv.ParseInt(string(str_timestamp), 10, 64)
 	if err != nil {
-		log.Printf("[ME %d] Cannot convert string Timestamp to int64", myVid)
+		log.Printf("[ME %d] Cannot convert string timestamp to int64", myVid)
 	}
-	node.Alive = true
+	node.alive = true
 	return node
 }
 
@@ -581,7 +588,7 @@ func updateMonitors() {
 
 	to_add := Difference(new_monitors, old_monitors)
 	for _, vid := range(to_add) {
-		message := fmt.Sprintf("ADD,%d,%s,%d", myVid, zookeeper.MemberMap[myVid].Ip, zookeeper.MemberMap[myVid].Timestamp)
+		message := fmt.Sprintf("ADD,%d,%s,%d", myVid, memberMap[myVid].ip, memberMap[myVid].timestamp)
 		sendMessage(vid, message, num_tries)
 	}
 
@@ -598,7 +605,7 @@ func updateMonitors() {
 
 func printGarbage() {
 	garbage_list := []int{}
-	for k := range(zookeeper.Garbage) {
+	for k := range(garbage) {
 		garbage_list = append(garbage_list, k)
 	}
 	log.Printf("[ME %d] Garbage set = %v", myVid, garbage_list)
@@ -610,9 +617,9 @@ func garbageCollection() {
 		time.Sleep(30 * time.Second)
 
 		for i:=1; i<=maxID; i++ {
-			mnode, isavailable := zookeeper.MemberMap[i]
-			if ((!isavailable || !mnode.Alive) && (time.Now().Unix() - eventTimeMap[i] > 6)) {
-				zookeeper.Garbage[i] = true
+			mnode, isavailable := memberMap[i]
+			if ((!isavailable || !mnode.alive) && (time.Now().Unix() - eventTimeMap[i] > 6)) {
+				garbage[i] = true
 			}
 		}
 		printGarbage()
@@ -650,12 +657,12 @@ func listenOtherPort() (err error) {
 
 		switch message_type {
 		case "ADD":
-			var newnode zookeeper.MemberNode
+			var newnode MemberNode
 			newnode = createMember(split_message[2], split_message[3])
-			zookeeper.MemberMap[subject] = &newnode //[W]
+			memberMap[subject] = &newnode
 
 			var cnode ChildNode
-			cnode.Timestamp = time.Now().Unix()
+			cnode.timestamp = time.Now().Unix()
 			children[subject] = &cnode
 
 			printChildren()
@@ -671,17 +678,17 @@ func listenOtherPort() (err error) {
 		case "INTRODUCER":
 			if myVid == 0 {
 				// Listen to atleast 4 different nodes than myself - to handle three simultaneous failures
-				if len(zookeeper.MemberMap) < 5 {
+				if len(memberMap) < 5 {
 					newnode := createMember(split_message[2],split_message[3])
-					zookeeper.MemberMap[subject] = &newnode //[W]
+					memberMap[subject] = &newnode
 
 					tempmax, _ := strconv.Atoi(split_message[4])
 					maxID = max(maxID, tempmax)
 					
-					message := fmt.Sprintf("JOIN,%d,%s,%d", 0, zookeeper.MemberMap[0].Ip, zookeeper.MemberMap[0].Timestamp)
+					message := fmt.Sprintf("JOIN,%d,%s,%d", 0, memberMap[0].ip,memberMap[0].timestamp)
 					updateMonitors()
 
-					eventTimeMap[0] = zookeeper.MemberMap[0].Timestamp
+					eventTimeMap[0] = memberMap[0].timestamp
 					disseminate(message)
 
 					log.Printf("[ME %d] Processed introducer ping entry from vid=%d", myVid, subject)
@@ -689,9 +696,9 @@ func listenOtherPort() (err error) {
 			}
 
 		case "PRED", "SUCC1", "SUCC2":
-			var newnode zookeeper.MemberNode
+			var newnode MemberNode
 			newnode = createMember(split_message[2], split_message[3])
-			zookeeper.MemberMap[subject] = &newnode //[W]
+			memberMap[subject] = &newnode
 
 			var node MonitorNode
 			node = createMonitor(subject)
@@ -706,34 +713,34 @@ func listenOtherPort() (err error) {
 				}
 			}
 
-			message := fmt.Sprintf("ADD,%d,%s,%d", myVid, zookeeper.MemberMap[myVid].Ip, zookeeper.MemberMap[myVid].Timestamp)
-			sendMessageAddr(newnode.Ip, message, num_tries)
+			message := fmt.Sprintf("ADD,%d,%s,%d", myVid, memberMap[myVid].ip, memberMap[myVid].timestamp)
+			sendMessageAddr(newnode.ip, message, num_tries)
 
 			log.Printf("[ME %d] Set my %s to %d", myVid, strings.ToLower(message_type), subject)
 
 		case "YOU":
 			myVid = subject
-			var newnode zookeeper.MemberNode
+			var newnode MemberNode
 			newnode = createMember(split_message[2], split_message[3])
-			zookeeper.MemberMap[subject] = &newnode //[W]
+			memberMap[subject] = &newnode
 
 			go checkIntroducer()
 
-			log.Printf("[ME %d] Processed my zookeeper.MemberMap entry", myVid)
+			log.Printf("[ME %d] Processed my memberMap entry", myVid)
 
 		case "MEMBER":
 			if subject == myVid {
 				break
 			}
 			newnode := createMember(split_message[2], split_message[3])
-			zookeeper.MemberMap[subject] = &newnode //[W]
+			memberMap[subject] = &newnode
 
 			if subject != 0 {
 				updateMonitors()
 				// introducer is anyway going to send it monitors.
 			}
 			
-			log.Printf("[ME %d] Processed a new zookeeper.MemberMap entry vid=%d", myVid, subject)
+			log.Printf("[ME %d] Processed a new memberMap entry vid=%d", myVid, subject)
 
 		case "JOIN":
 			origin_time, _ := strconv.ParseInt(string(split_message[3]), 10, 64)
@@ -745,15 +752,15 @@ func listenOtherPort() (err error) {
 
 				if subject != myVid {
 					newnode := createMember(split_message[2], split_message[3])
-					zookeeper.MemberMap[subject] = &newnode //[W]
+					memberMap[subject] = &newnode
 				}
 
-				message := fmt.Sprintf("MEMBER,%d,%s,%d", myVid, myIP, zookeeper.MemberMap[myVid].Timestamp)
+				message := fmt.Sprintf("MEMBER,%d,%s,%d", myVid, myIP, memberMap[myVid].timestamp)
 				sendMessage(subject, message, num_tries)
 
 				updateMonitors()
 
-				log.Printf("[ME %d] Processed JOIN zookeeper.MemberMap entry for vid=%d", myVid, subject)
+				log.Printf("[ME %d] Processed JOIN memberMap entry for vid=%d", myVid, subject)
 
 				printMembershipList()
 			} 
@@ -766,9 +773,9 @@ func listenOtherPort() (err error) {
 				eventTimeMap[subject] = origin_time
 				disseminate(message)
 
-				_, ok := zookeeper.MemberMap[subject]
+				_, ok := memberMap[subject]
 				if ok {
-					zookeeper.MemberMap[subject].Alive = false //[W]
+					memberMap[subject].alive = false
 					
 					_, ok = children[subject]
 					if ok {
@@ -778,7 +785,7 @@ func listenOtherPort() (err error) {
 					if subject == maxID {
 						var i int
 						for i=maxID; i>=0; i-- {
-							if zookeeper.MemberMap[i].Alive {
+							if memberMap[i].alive {
 								break
 							}
 						}
@@ -792,17 +799,17 @@ func listenOtherPort() (err error) {
 			}			
 
 		case "SUSPECT":
-			var Alive = false
+			var alive = false
 
 			// Checked if it is set as dead in my list, if yes send dead message already
-			if zookeeper.MemberMap[subject].Alive == false {
-				Alive = false
+			if memberMap[subject].alive == false {
+				alive = false
 			} else{
 				var currTime = time.Now().Unix()
 				for child_vid, cnode := range(children) {
 					if subject == child_vid {
-						if currTime - cnode.Timestamp < heartbeatPeriod {
-							Alive = true
+						if currTime - cnode.timestamp < heartbeatPeriod {
+							alive = true
 						}
 						break
 					}
@@ -810,13 +817,13 @@ func listenOtherPort() (err error) {
 			}
 
 			var message string
-			if Alive {
+			if alive {
 				message = fmt.Sprintf("STATUS,%d,1", subject)
 			} else {
 				message = fmt.Sprintf("STATUS,%d,0", subject)
 			}
 			sendMessageAddr(addr.IP.String(), message, num_tries)
-			if Alive {
+			if alive {
 				log.Printf("[ME %d] Processed suspect message for %d, sent ALIVE", myVid, subject)
 			} else {
 				log.Printf("[ME %d] Processed a suspect message for %d, sent NOT ALIVE", myVid, subject)
@@ -854,18 +861,18 @@ func sendJoinRequest() {
 
 	conn, err := net.DialUDP("udp", nil, &addr)
 	if err != nil {
-		log.Printf("[ME %d] Unable to dial UDP to introducer Ip=%s, port=%d", myVid, introducer, introducerPort)
+		log.Printf("[ME %d] Unable to dial UDP to introducer ip=%s, port=%d", myVid, introducer, introducerPort)
 	}
 	message := "1"
 	defer conn.Close()
 	conn.Write([]byte(message))
 
-	log.Printf("[ME %d] Sent a JOIN request to introducer Ip=%s", myVid, introducer)
+	log.Printf("[ME %d] Sent a JOIN request to introducer ip=%s", myVid, introducer)
 	return
 }
 
 func getmyIP() (string) {
-	var myIp string
+	var myip string
 	addrs, err := net.InterfaceAddrs()
 	if err != nil {
 		log.Fatalf("Cannot get my IP")
@@ -874,11 +881,11 @@ func getmyIP() (string) {
 	for _, a := range addrs {
 		if ipnet, ok := a.(*net.IPNet); ok && !ipnet.IP.IsLoopback() {
 			if ipnet.IP.To4() != nil {
-				myIp = ipnet.IP.String()
+				myip = ipnet.IP.String()
 			}
 		}
 	}
-	return myIp
+	return myip
 }
 
 func main() {
@@ -901,11 +908,11 @@ func main() {
 
 	if myIP == introducer {
 		myVid = 0
-		var node zookeeper.MemberNode
-		node.Ip = myIP
-		node.Timestamp = time.Now().Unix()
-		node.Alive = true
-		zookeeper.MemberMap[0] = &node //[W]
+		var node MemberNode
+		node.ip = myIP
+		node.timestamp = time.Now().Unix()
+		node.alive = true
+		memberMap[0] = &node
 	}
 
 	go sendHeartbeat()
@@ -928,6 +935,12 @@ func main() {
 	}
 	go updateFingerTable()
 
+	//DEPLOY ZOOKEEPER
+	if myIP == zoo_ip {
+		go host_zookeeper()
+	}
+	//ZOOKEEPER END
+
 	sigs := make(chan os.Signal, 1)
 
 	signal.Notify(sigs, syscall.SIGQUIT)
@@ -949,3 +962,387 @@ func main() {
 	return
 }
 
+
+//////////////////////////////////////OUR FILE DUMP//////////////////////////////////////////////////
+const portnum = "3074"         
+
+// type MemberNode struct {
+// 	ip string
+// 	Timestamp int64
+// 	alive bool
+// }
+
+// var memberMap = make(map[int]*MemberNode)
+// var Garbage = make(map[int]bool)
+// var FailQueue = make([]*MemberNode)
+
+type Zookeeper int
+
+type FileLoc struct{
+	MemID 	  int
+	ip 		  string
+	Timestamp int64
+}
+
+var FileTable = make(map[string]([4]FileLoc))
+
+// Thus, the allowed file ops include:
+
+// 1) put localfilename sdfsfilename (from local dir)
+//		4 initial writes
+//		3 updates (quorum)
+//		Check if file was written to in the last 1 minute, and ask for confirm if it was
+//		Wait 30 sec for confirm, else yeet
+//		~~~~~~~~~~~~~~~~~~~~~~~~~~FOR ZOOKEEPER~~~~~~~~~~~~~~~~~~~~~~~~~~~
+//		If initial write: 		pick 4 nodes and return IP list
+//		If late update (>1):	pick 3 of 4 nodes and return IP list
+// 		If early update (<1):	Ask for confirm; wait 30 secs, if confirm arrives, send 3 of 4 IPs, else send 0 IPs
+
+// 2) get sdfsfilename localfilename (fetches to local dir)
+//		2 fetches (quorum)
+//		update lesser timestamp if timestamps not equal (write)
+
+
+// 3) delete sdfsfilename
+// 4) ls sdfsfilename: list all machine (VM) addresses where this file is currently
+// being stored; 
+// 5) store: At any machine, list all files currently being stored at this
+// machine. Here sdfsfilename is an arbitrary string while localfilename is
+// the Unix-style local file system name.
+
+// Put is used to both insert the original file and
+// update it (updates are comprehensive, i.e., they send the entire file, not just a
+// block of it).
+func num_live() int{
+	fmt.Printf("num_live\n")
+	printmemberMap();
+	count := 0
+	for _, v := range memberMap{
+		if v.alive{	
+			count++
+		}
+	}
+	return count
+}
+
+func printmemberMap() {
+	fmt.Printf("Zookeeper member list: [\n")
+	for id, ele := range(memberMap) {
+		fmt.Printf("%d: %s, %d, %t\n", id, ele.ip, ele.timestamp, ele.alive)
+	}
+	fmt.Printf("]\n")
+}
+
+func pick4() ([]int, []string){
+	var ret_str []string = make([]string, 4)
+	var ret_int []int = make([]int, 4)
+	var a,b,c,d int
+
+	if (num_live() < 4){
+		fmt.Printf("Not enough live nodes to pick random, %d\n", num_live())
+		for k, v := range memberMap{
+			if v.alive{	
+				ret_str = append(ret_str, v.ip)
+				ret_int = append(ret_int, k)
+				fmt.Printf("Returning %s and %d in set\n", v.ip, k)
+			}
+		}
+		return ret_int, ret_str
+	}
+
+	fmt.Printf("Picking 4 random nodes\n")
+
+	s := rand.NewSource(time.Now().Unix())
+	r := rand.New(s) // initialize local pseudorandom generator
+
+	a = r.Intn(len(memberMap))
+	MemNode, ok := memberMap[a]
+	for !ok || !MemNode.alive{
+		a = r.Intn(len(memberMap))
+	}
+	ret_str = append(ret_str, MemNode.ip)
+	ret_int = append(ret_int, a)
+	
+	b = r.Intn(len(memberMap))
+	MemNode, ok = memberMap[b]
+	for !ok || !MemNode.alive || b == a{
+		b = r.Intn(len(memberMap))
+	}
+	ret_str = append(ret_str, MemNode.ip)
+	ret_int = append(ret_int, b)
+
+
+	c = r.Intn(len(memberMap))
+	MemNode, ok = memberMap[c]
+	for !ok || !MemNode.alive || c == a || c == b{
+		c = r.Intn(len(memberMap))
+	}
+	ret_str = append(ret_str, MemNode.ip)
+	ret_int = append(ret_int, c)
+
+
+	d = r.Intn(len(memberMap))
+	MemNode, ok = memberMap[d]
+	for !ok || !MemNode.alive || d == a || d == b || d == c{
+		d = r.Intn(len(memberMap))
+	}
+	ret_str = append(ret_str, MemNode.ip)
+	ret_int = append(ret_int, d)
+
+	fmt.Printf("Picked [(%d,%d) %s,%s] [(%d,%d) %s,%s] [(%d,%d) %s,%s] and [(%d,%d) %s,%s]\n", a, ret_int[0], 
+																							   memberMap[a].ip, ret_str[0],
+																							   b, ret_int[1],
+																							   memberMap[b].ip, ret_str[1],
+																							   c, ret_int[2],
+																							   memberMap[c].ip, ret_str[2],
+																							   d, ret_int[3],
+																							   memberMap[d].ip, ret_str[3])
+	return ret_int, ret_str
+}
+
+func pick3(fileloc_arr [4]FileLoc) ([]int, []string){
+	var ret_str []string = make([]string, 3)
+	var ret_int []int = make([]int, 3)
+	//Pick one to not
+	s := rand.NewSource(time.Now().Unix())
+	r := rand.New(s) // initialize local pseudorandom generator
+
+	a := r.Intn(len(fileloc_arr))
+	for !memberMap[fileloc_arr[a].MemID].alive{
+		a = r.Intn(len(fileloc_arr))
+	}
+	ret_int = append(ret_int, a)
+	ret_str = append(ret_str, fileloc_arr[a].ip)
+
+
+	b := r.Intn(len(fileloc_arr))
+	for !memberMap[fileloc_arr[b].MemID].alive || a==b{
+		b = r.Intn(len(fileloc_arr))
+	}
+	ret_int = append(ret_int, b)
+	ret_str = append(ret_str, fileloc_arr[b].ip)
+
+
+	c := r.Intn(len(fileloc_arr))
+	for !memberMap[fileloc_arr[c].MemID].alive || c==a || c==b{
+		c = r.Intn(len(fileloc_arr))
+	}
+	ret_int = append(ret_int, c)
+	ret_str = append(ret_str, fileloc_arr[c].ip)
+
+
+	fmt.Printf("Picked [(%d, MemID %d) %s,%s] [(%d, MemID %d) %s,%s] [(%d, MemID %d) %s,%s]\n",  			
+																			a, fileloc_arr[a].MemID,
+																		    fileloc_arr[a].ip, ret_str[0],
+																		    b, fileloc_arr[b].MemID,
+																		    fileloc_arr[b].ip, ret_str[1],
+																			c, fileloc_arr[c].MemID,
+																			fileloc_arr[c].ip, ret_str[2])
+	return ret_int, ret_str
+}
+
+func pick2(fileloc_arr [4]FileLoc) ([]int, []string){
+	var ret_str []string = make([]string, 2)
+	var ret_int []int = make([]int, 2)
+	//Pick one to not
+	s := rand.NewSource(time.Now().Unix())
+	r := rand.New(s) // initialize local pseudorandom generator
+
+	a := r.Intn(len(fileloc_arr))
+	for !memberMap[fileloc_arr[a].MemID].alive{
+		a = r.Intn(len(fileloc_arr))
+	}
+	ret_int = append(ret_int, a)
+	ret_str = append(ret_str, fileloc_arr[a].ip)
+
+
+	b := r.Intn(len(fileloc_arr))
+	for !memberMap[fileloc_arr[b].MemID].alive || a==b{
+		b = r.Intn(len(fileloc_arr))
+	}
+	ret_int = append(ret_int, b)
+	ret_str = append(ret_str, fileloc_arr[b].ip)
+
+	
+	fmt.Printf("Picked [(%d, MemID %d) %s,%s] [(%d, MemID %d) %s,%s]\n", 	a, fileloc_arr[a].MemID,
+																		    fileloc_arr[a].ip, ret_str[0],
+																		    b, fileloc_arr[b].MemID,
+																		    fileloc_arr[b].ip, ret_str[1])
+	return ret_int, ret_str
+}
+
+type Put_args struct{
+	Sdfsname, Call_ip string
+}
+
+type Put_return struct{
+	ips []string
+	Timestamp int64
+}
+
+// 1) put localfilename sdfsfilename (from local dir)
+//		4 initial writes
+//		3 updates (quorum)
+//		Check if file was written to in the last 1 minute, and ask for confirm if it was
+//		Wait 30 sec for confirm, else yeet
+//		~~~~~~~~~~~~~~~~~~~~~~~~~~FOR ZOOKEEPER~~~~~~~~~~~~~~~~~~~~~~~~~~~
+//		If initial write: 		pick 4 nodes and return IP list
+//		If late update (>1):	pick 3 of 4 nodes and return IP list
+// 		If early update (<1):	Ask for confirm; wait 30 secs, if confirm arrives, send 3 of 4 IPs, else send 0 IPs
+func (t *Zookeeper) Zoo_put(args Put_args, reply *Put_return) error {
+
+	//Just a check-in for a handled request
+	if fileloc_arr, ok := FileTable[args.Sdfsname]; !ok { //NEW PUT
+		a, b := pick4()
+		c := int64(time.Now().Nanosecond())
+		var f [4]FileLoc
+		f[0] = FileLoc{a[0], b[0], c}
+		f[1] = FileLoc{a[1], b[1], c}
+		f[2] = FileLoc{a[2], b[2], c}
+		f[3] = FileLoc{a[3], b[3], c}
+		FileTable[args.Sdfsname] = f
+		(*reply).ips = b
+		(*reply).Timestamp = c
+	}else{									   //UPDATE (QUORUM)
+		//Check on timestamp to see when last write was
+
+		//Pick random 3 because Quorum
+		a, b := pick3(fileloc_arr)
+		c := int64(time.Now().Nanosecond())
+		fileloc_arr[a[0]].Timestamp = c
+		fileloc_arr[a[1]].Timestamp = c
+		fileloc_arr[a[2]].Timestamp = c
+		(*reply).ips = b
+		(*reply).Timestamp = c
+	}
+
+	// return nil
+	//Form our return string, and then return
+    // *reply = name + ":\n" + out.String() + "[" + str1 + "]\n";
+	return nil
+}
+
+type Get_args struct{
+	Sdfsname string
+}
+
+type Get_return struct{
+	ip string
+}
+// 2) get sdfsfilename localfilename (fetches to local dir)
+//		2 fetches (quorum)
+//		update lesser timestamp if timestamps not equal (write)
+func (t *Zookeeper) Zoo_get(args Get_args, reply *Get_return) error {
+
+	if fileloc_arr, ok := FileTable[args.Sdfsname]; !ok { //Invalid file
+		fmt.Printf("GET: No such file found\n")
+		(*reply).ip = ""
+	}else{
+		_, b := pick2(fileloc_arr)
+		c0 := get_timestamp(args.Sdfsname, b[0], portnum)
+		c1 := get_timestamp(args.Sdfsname, b[1], portnum)
+		if(c0 == c1){ 		//both are on same consistency
+			(*reply).ip = b[0]
+		} else {				//One needs an update
+			if c0 > c1 {
+				(*reply).ip = b[0]
+				rep_to(args.Sdfsname, b[1], portnum, b[0], portnum)
+			}else{
+				(*reply).ip = b[1]
+				rep_to(args.Sdfsname, b[0], portnum, b[1], portnum)
+			}
+		}
+	}
+
+	return nil
+}
+
+
+type Del_args struct{
+	Sdfsname string
+}
+
+// 3) delete sdfsfilename
+func (t *Zookeeper) Zoo_del(args Del_args, reply *int64) error {
+	if _, ok := FileTable[args.Sdfsname]; !ok { //Invalid file
+		fmt.Printf("DEL: No such file found, so success I guess?\n")
+	}else{
+		for i := 0; i < 4; i++{
+			del(args.Sdfsname, (FileTable[args.Sdfsname])[i].ip, portnum)
+		}
+		delete(FileTable, args.Sdfsname)
+	}
+	(*reply) = 0
+	return nil
+}
+
+
+// 4) ls sdfsfilename: list all machine (VM) addresses where this file is currently
+// being stored;
+type Ls_args struct{
+	Sdfsname string
+}
+
+func (t* Zookeeper) Zoo_ls(args Ls_args, reply *string) error{
+	str := ""
+	if _, ok := FileTable[args.Sdfsname]; ok { //Invalid file
+		fmt.Printf("LS: Starting search...\n")
+		for i := 0; i < 4; i++{
+			str += "(" + string((FileTable[args.Sdfsname])[i].MemID) + ")" + string((FileTable[args.Sdfsname])[i].ip) + "\n"
+		}
+	}
+	*reply = str
+	return nil
+
+}
+// 5) store: At any machine, list all files currently being stored at this
+// machine. Here sdfsfilename is an arbitrary string while localfilename is
+// the Unix-style local file system name.
+
+func del(filename, ip, port string) int64{
+	client, err := rpc.DialHTTP("tcp", ip + ":" + port) //Connect to given address
+	if err != nil {
+		return -1
+	}
+
+	var args = sdfsrpc.Read_args{Sdfsname: filename} //Create the args gob to send over to the RPC
+	var reply int64 //Create a container for our results
+	_ = client.Call("Sdfsrpc.Delete_file", args, &reply) //Make the remote call
+	return reply
+}
+
+func get_timestamp(filename, ip, port string) int64{
+	client, err := rpc.DialHTTP("tcp", ip + ":" + port) //Connect to given address
+	if err != nil {
+		return -1
+	}
+	var args = sdfsrpc.Read_args{Sdfsname: filename} //Create the args gob to send over to the RPC
+	var reply int64 //Create a container for our results
+	_ = client.Call("Sdfsrpc.Get_timestamp", args, &reply) //Make the remote call	
+	return reply
+}
+
+func rep_to(filename, ipto, portto, ip, port string) int{
+	client, err := rpc.DialHTTP("tcp", ip + ":" + port) //Connect to given address
+	if err != nil {
+		return -1
+	}
+	var args = sdfsrpc.Rep_args{filename, ipto, portto}
+	var retval int
+	_ = client.Call("Sdfsrpc.Replicate_to", args, &retval) //Make the remote call	
+	return retval
+}
+
+func host_zookeeper(){
+	zookeeper := new(Zookeeper) //Creates a new Zookeeper object to handle the RPCs for this server
+	rpc.Register(zookeeper) //Registers the Zookeeper as our handler
+	rpc.HandleHTTP() //HTTP format requests
+	fmt.Printf("Zookeeper is up for business! \n"); //Notify user
+	l, e := net.Listen("tcp", ":3074") //Listen to requests on port 3074
+	if e != nil {
+		//Error handling
+		log.Fatal("listen error:", e)
+	}
+	fmt.Printf("Serving on port %d\n", 3074); //Notify that we're up
+	http.Serve(l, nil) //Serve	
+}
