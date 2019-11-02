@@ -25,6 +25,7 @@ func main(){
 	// fmt.Printf("Read %s with Timestamp %d\n", a.Data, a.Timestamp)
 	// // delete("testfile", "172.22.154.255", "3074")
 	// rep_to("testfile", "10.192.103.233", "3074", "172.22.154.255", "3074")
+	c_put("log.txt", "firstfile")
 }
 
 

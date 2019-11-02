@@ -59,6 +59,8 @@ var FileTable = make(map[string]([4]FileLoc))
 // update it (updates are comprehensive, i.e., they send the entire file, not just a
 // block of it).
 func num_live() int{
+	fmt.Printf("num_live\n")
+	printMemberMap();
 	count := 0
 	for _, v := range MemberMap{
 		if v.Alive{	
@@ -68,13 +70,21 @@ func num_live() int{
 	return count
 }
 
+func printMemberMap() {
+	fmt.Printf("Zookeeper member list: [\n")
+	for id, ele := range(zookeeper.MemberMap) {
+		fmt.Printf("%d: %s, %d, %t\n", id, ele.Ip, ele.Timestamp, ele.Alive)
+	}
+	fmt.Printf("]\n")
+}
+
 func pick4() ([]int, []string){
 	var ret_str []string = make([]string, 4)
 	var ret_int []int = make([]int, 4)
 	var a,b,c,d int
 
 	if (num_live() < 4){
-		fmt.Printf("Not enough live nodes to pick random\n")
+		fmt.Printf("Not enough live nodes to pick random, %d\n", numlive())
 		for k, v := range MemberMap{
 			if v.Alive{	
 				ret_str = append(ret_str, v.Ip)
