@@ -942,7 +942,7 @@ func main() {
 
 		//DEPLOY SDFS
 		go host_sdfs()
-		//SDFSEND
+		//SDFS END
 	
 		//DEPLOY ZOOKEEPER
 		if myIP == zoo_ip {
