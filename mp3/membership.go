@@ -39,11 +39,11 @@ type ChildNode struct {
 	timestamp int64
 }
 
-var introducer = "172.22.155.255"
+var introducer = "172.22.154.255"
 var introducerPort = 8082
 var introPingPeriod = 5
 
-var zoo_ip = "172.22.155.255"
+var zoo_ip = "172.22.154.255"
 var zoo_portnum = "3075"
 var  node_portnum = "3074"
 
