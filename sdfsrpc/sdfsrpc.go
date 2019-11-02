@@ -10,7 +10,6 @@ import (
 	    "fmt"
     	"os"
     	"io/ioutil"
-		"log"
 		"net/rpc"
 		"time"
 		)
@@ -173,7 +172,8 @@ func (t *Sdfsrpc) Replicate_to(args Rep_args, reply *int) error {
 		fmt.Printf("Calling RPC (%s:%s)...\n", args.Ip, args.Port)
 		client, err := rpc.DialHTTP("tcp", args.Ip + ":" + args.Port) //Connect to given address
 		if err != nil {
-			log.Fatal(err)
+			fmt.Printf("Replicee %s is unreachable\n", args.Ip)
+			return err
 		}
 
 		fmt.Printf("Replicating %s to address %s:%s\n", args.Sdfsname, args.Ip, args.Port)

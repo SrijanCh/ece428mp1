@@ -15,10 +15,10 @@ import (
     "syscall"
     "log"
     "io"
-    "members"
+    "zookeeper"
 )
 
-// type members.MemberNode struct {
+// type zookeeper.MemberNode struct {
 // 	Ip string
 // 	Timestamp int64
 // 	Alive bool
@@ -42,7 +42,7 @@ var myVid int
 var otherPort = 8081
 var myIP string
 
-// var members.MemberMap = make(map[int]*members.MemberNode)
+// var zookeeper.MemberMap = make(map[int]*zookeeper.MemberNode)
 var monitors = make(map[string]*MonitorNode)
 var children = make(map[int]*ChildNode)
 
@@ -117,8 +117,8 @@ func receiveHeartbeat() {
 }
 
 func printMembershipList() {
-	log.Printf("My members: [")
-	for id := range(members.MemberMap) {
+	log.Printf("My zookeeper: [")
+	for id := range(zookeeper.MemberMap) {
 		log.Printf("%d ", id)
 	}
 	log.Printf("]\n")
@@ -172,7 +172,7 @@ func checkSuspicion(vid int) {
 	for i, suspect := range(suspects) {
 		if suspect == vid {
 			suspect_idx = i
-			members.MemberMap[suspect].Alive = false //[W]
+			zookeeper.MemberMap[suspect].Alive = false //[W]
 			_, ok := children[vid]
 			if ok {
 				delete(children, vid)
@@ -197,12 +197,12 @@ func checkSuspicion(vid int) {
 
 func sendMessage(vid int, message string, num_tries int) {
 	var addr net.UDPAddr
-	addr.IP = net.ParseIP(members.MemberMap[vid].ip)
+	addr.IP = net.ParseIP(zookeeper.MemberMap[vid].Ip)
 	addr.Port = otherPort
 
 	conn, err := net.DialUDP("udp", nil, &addr)
 	if err != nil {
-		log.Printf("[ME %d] Unable to dial UDP to vid=%d Ip=%s", myVid, vid, members.MemberMap[vid].ip)
+		log.Printf("[ME %d] Unable to dial UDP to vid=%d Ip=%s", myVid, vid, zookeeper.MemberMap[vid].Ip)
 	}
 	defer conn.Close()
 	for i:=0; i<num_tries; i++ {
@@ -220,7 +220,7 @@ func sendMessage(vid int, message string, num_tries int) {
 
 func sendMessageAddr(Ip string, message string, num_tries int) {
 	var addr net.UDPAddr
-	addr.IP = net.ParseIP(ip)
+	addr.IP = net.ParseIP(Ip)
 	addr.Port = otherPort
 
 	conn, err := net.DialUDP("udp", nil, &addr)
@@ -267,8 +267,8 @@ func getPredecessor(vid int) (int) {
 	pred := mod(vid - 1, n)
 	attempts := 0
 	for {
-		_, ok := members.MemberMap[pred]
-		if ok && members.MemberMap[pred].Alive == true {
+		_, ok := zookeeper.MemberMap[pred]
+		if ok && zookeeper.MemberMap[pred].Alive == true {
 			if pred != vid {
 				break
 			}
@@ -290,8 +290,8 @@ func getSuccessor(vid int) (int) {
 	succ := (vid + 1) % n
 	attempts := 0
 	for {
-		_, ok := members.MemberMap[succ] // checking if succ is in the members.MemberMap
-		if ok && members.MemberMap[succ].Alive == true {
+		_, ok := zookeeper.MemberMap[succ] // checking if succ is in the zookeeper.MemberMap
+		if ok && zookeeper.MemberMap[succ].Alive == true {
 			if succ != vid {
 				break
 			}
@@ -319,8 +319,8 @@ func getSuccessor2(vid int) (int) {
 	succ2 := (succ1 + 1) % n
 	attempts := 0
 	for {
-		_, ok := members.MemberMap[succ2]
-		if ok && members.MemberMap[succ2].Alive == true {
+		_, ok := zookeeper.MemberMap[succ2]
+		if ok && zookeeper.MemberMap[succ2].Alive == true {
 			if succ2 != vid {
 				break
 			}
@@ -380,7 +380,7 @@ func disseminate(message string) {
 		sendMessage(node.vid, message, 1)
 	}
 	for _, finger := range(fingerTable) {
-		if (finger == myVid || members.MemberMap[finger].Alive == false) {
+		if (finger == myVid || zookeeper.MemberMap[finger].Alive == false) {
 			continue
 		}
 		sendMessage(finger, message, 1)
@@ -391,9 +391,9 @@ func disseminate(message string) {
 func checkIntroducer() {
 	for {
 		time.Sleep(time.Duration(introPingPeriod) * time.Second)
-		if members.MemberMap[0].Alive == false {
+		if zookeeper.MemberMap[0].Alive == false {
 			// If introducer is dead, periodically send your record to the introducer
-			message := fmt.Sprintf("INTRODUCER,%d,%s,%d,%d",myVid,members.MemberMap[myVid].ip,members.MemberMap[myVid].Timestamp,maxID)
+			message := fmt.Sprintf("INTRODUCER,%d,%s,%d,%d",myVid,zookeeper.MemberMap[myVid].Ip,zookeeper.MemberMap[myVid].Timestamp,maxID)
 			sendMessage(0, message, num_tries)
 		}
 	
@@ -405,19 +405,19 @@ func findAndSendMonitors(vid int) {
 
 	pred = getPredecessor(vid)
 	if pred != -1{
-		message := fmt.Sprintf("PRED,%d,%s,%d", pred, members.MemberMap[pred].ip, members.MemberMap[pred].Timestamp)
+		message := fmt.Sprintf("PRED,%d,%s,%d", pred, zookeeper.MemberMap[pred].Ip, zookeeper.MemberMap[pred].Timestamp)
 		sendMessage(vid, message, num_tries)
 	}
 	
 	succ1 = getSuccessor(vid)
 	if succ1 != -1 {
-		message := fmt.Sprintf("SUCC1,%d,%s,%d", succ1, members.MemberMap[succ1].ip, members.MemberMap[succ1].Timestamp)
+		message := fmt.Sprintf("SUCC1,%d,%s,%d", succ1, zookeeper.MemberMap[succ1].Ip, zookeeper.MemberMap[succ1].Timestamp)
 		sendMessage(vid, message, num_tries)
 	}
 	
 	succ2 = getSuccessor2(vid)
 	if succ2 != -1 {
-		message := fmt.Sprintf("SUCC2,%d,%s,%d", succ2, members.MemberMap[succ2].ip, members.MemberMap[succ2].Timestamp)
+		message := fmt.Sprintf("SUCC2,%d,%s,%d", succ2, zookeeper.MemberMap[succ2].Ip, zookeeper.MemberMap[succ2].Timestamp)
 		sendMessage(vid, message, num_tries)
 	}
 	
@@ -448,31 +448,31 @@ func completeJoinRequests() (err error) {
 
 		var newVid int
 
-		if len(garbage) == 0 {
+		if len(zookeeper.Garbage) == 0 {
 			maxID = maxID + 1
 			newVid = maxID
 		} else {
-			for key := range(garbage) {
+			for key := range(zookeeper.Garbage) {
 				newVid = key
 				break
 			}
-			delete(garbage, newVid)
+			delete(zookeeper.Garbage, newVid)
 		}
 
-		var newnode members.MemberNode
+		var newnode zookeeper.MemberNode
 		newnode.Ip = addr.IP.String()
 		newnode.Timestamp = time.Now().Unix()
 		newnode.Alive = true
-		members.MemberMap[newVid] = &newnode //[W]
+		zookeeper.MemberMap[newVid] = &newnode //[W]
 
-		log.Printf("[ME %d] Added entry Ip=%s Timestamp=%d at vid=%d", myVid, newnode.ip, newnode.Timestamp, newVid)
+		log.Printf("[ME %d] Added entry Ip=%s Timestamp=%d at vid=%d", myVid, newnode.Ip, newnode.Timestamp, newVid)
 
 		// Send the node's record
-		message := fmt.Sprintf("YOU,%d,%s,%d", newVid, newnode.ip, newnode.Timestamp)
+		message := fmt.Sprintf("YOU,%d,%s,%d", newVid, newnode.Ip, newnode.Timestamp)
 		sendMessage(newVid, message, num_tries)
 
 		// Send introducer record
-		message = fmt.Sprintf("MEMBER,0,%s,%d", introducer, members.MemberMap[0].Timestamp)
+		message = fmt.Sprintf("MEMBER,0,%s,%d", introducer, zookeeper.MemberMap[0].Timestamp)
 		sendMessage(newVid, message, num_tries)
 
 		findAndSendMonitors(newVid)
@@ -480,7 +480,7 @@ func completeJoinRequests() (err error) {
 		// this delay is essential, otherwise it will be bombarded with MEMBER messages even before init setup
 		time.Sleep(100 * time.Millisecond)
 
-		message = fmt.Sprintf("JOIN,%d,%s,%d", newVid, newnode.ip, newnode.Timestamp)
+		message = fmt.Sprintf("JOIN,%d,%s,%d", newVid, newnode.Ip, newnode.Timestamp)
 		eventTimeMap[newVid] = newnode.Timestamp
 		disseminate(message)
 
@@ -492,10 +492,10 @@ func completeJoinRequests() (err error) {
 func createMonitor(vid int) (MonitorNode) {
 	var node MonitorNode
 	node.vid = vid
-	node.Ip = members.MemberMap[vid].ip
+	node.Ip = zookeeper.MemberMap[vid].Ip
 
 	var addr net.UDPAddr
-	addr.IP = net.ParseIP(node.ip)
+	addr.IP = net.ParseIP(node.Ip)
 	addr.Port = heartbeatPort
 	var err error
 	node.conn, err = net.DialUDP("udp", nil, &addr)
@@ -505,8 +505,8 @@ func createMonitor(vid int) (MonitorNode) {
 	return node
 }
 
-func createMember(Ip string, str_Timestamp string) (members.MemberNode){
-	var node members.MemberNode
+func createMember(Ip string, str_Timestamp string) (zookeeper.MemberNode){
+	var node zookeeper.MemberNode
 	node.Ip = Ip
 	var err error
 	node.Timestamp, err = strconv.ParseInt(string(str_Timestamp), 10, 64)
@@ -581,7 +581,7 @@ func updateMonitors() {
 
 	to_add := Difference(new_monitors, old_monitors)
 	for _, vid := range(to_add) {
-		message := fmt.Sprintf("ADD,%d,%s,%d", myVid, members.MemberMap[myVid].ip, members.MemberMap[myVid].Timestamp)
+		message := fmt.Sprintf("ADD,%d,%s,%d", myVid, zookeeper.MemberMap[myVid].Ip, zookeeper.MemberMap[myVid].Timestamp)
 		sendMessage(vid, message, num_tries)
 	}
 
@@ -598,7 +598,7 @@ func updateMonitors() {
 
 func printGarbage() {
 	garbage_list := []int{}
-	for k := range(garbage) {
+	for k := range(zookeeper.Garbage) {
 		garbage_list = append(garbage_list, k)
 	}
 	log.Printf("[ME %d] Garbage set = %v", myVid, garbage_list)
@@ -610,9 +610,9 @@ func garbageCollection() {
 		time.Sleep(30 * time.Second)
 
 		for i:=1; i<=maxID; i++ {
-			mnode, isavailable := members.MemberMap[i]
+			mnode, isavailable := zookeeper.MemberMap[i]
 			if ((!isavailable || !mnode.Alive) && (time.Now().Unix() - eventTimeMap[i] > 6)) {
-				garbage[i] = true
+				zookeeper.Garbage[i] = true
 			}
 		}
 		printGarbage()
@@ -650,9 +650,9 @@ func listenOtherPort() (err error) {
 
 		switch message_type {
 		case "ADD":
-			var newnode members.MemberNode
+			var newnode zookeeper.MemberNode
 			newnode = createMember(split_message[2], split_message[3])
-			members.MemberMap[subject] = &newnode //[W]
+			zookeeper.MemberMap[subject] = &newnode //[W]
 
 			var cnode ChildNode
 			cnode.Timestamp = time.Now().Unix()
@@ -671,17 +671,17 @@ func listenOtherPort() (err error) {
 		case "INTRODUCER":
 			if myVid == 0 {
 				// Listen to atleast 4 different nodes than myself - to handle three simultaneous failures
-				if len(members.MemberMap) < 5 {
+				if len(zookeeper.MemberMap) < 5 {
 					newnode := createMember(split_message[2],split_message[3])
-					members.MemberMap[subject] = &newnode //[W]
+					zookeeper.MemberMap[subject] = &newnode //[W]
 
 					tempmax, _ := strconv.Atoi(split_message[4])
 					maxID = max(maxID, tempmax)
 					
-					message := fmt.Sprintf("JOIN,%d,%s,%d", 0, members.MemberMap[0].ip,members.MemberMap[0].Timestamp)
+					message := fmt.Sprintf("JOIN,%d,%s,%d", 0, zookeeper.MemberMap[0].Ip, zookeeper.MemberMap[0].Timestamp)
 					updateMonitors()
 
-					eventTimeMap[0] = members.MemberMap[0].Timestamp
+					eventTimeMap[0] = zookeeper.MemberMap[0].Timestamp
 					disseminate(message)
 
 					log.Printf("[ME %d] Processed introducer ping entry from vid=%d", myVid, subject)
@@ -689,9 +689,9 @@ func listenOtherPort() (err error) {
 			}
 
 		case "PRED", "SUCC1", "SUCC2":
-			var newnode members.MemberNode
+			var newnode zookeeper.MemberNode
 			newnode = createMember(split_message[2], split_message[3])
-			members.MemberMap[subject] = &newnode //[W]
+			zookeeper.MemberMap[subject] = &newnode //[W]
 
 			var node MonitorNode
 			node = createMonitor(subject)
@@ -706,34 +706,34 @@ func listenOtherPort() (err error) {
 				}
 			}
 
-			message := fmt.Sprintf("ADD,%d,%s,%d", myVid, members.MemberMap[myVid].ip, members.MemberMap[myVid].Timestamp)
-			sendMessageAddr(newnode.ip, message, num_tries)
+			message := fmt.Sprintf("ADD,%d,%s,%d", myVid, zookeeper.MemberMap[myVid].Ip, zookeeper.MemberMap[myVid].Timestamp)
+			sendMessageAddr(newnode.Ip, message, num_tries)
 
 			log.Printf("[ME %d] Set my %s to %d", myVid, strings.ToLower(message_type), subject)
 
 		case "YOU":
 			myVid = subject
-			var newnode members.MemberNode
+			var newnode zookeeper.MemberNode
 			newnode = createMember(split_message[2], split_message[3])
-			members.MemberMap[subject] = &newnode //[W]
+			zookeeper.MemberMap[subject] = &newnode //[W]
 
 			go checkIntroducer()
 
-			log.Printf("[ME %d] Processed my members.MemberMap entry", myVid)
+			log.Printf("[ME %d] Processed my zookeeper.MemberMap entry", myVid)
 
 		case "MEMBER":
 			if subject == myVid {
 				break
 			}
 			newnode := createMember(split_message[2], split_message[3])
-			members.MemberMap[subject] = &newnode //[W]
+			zookeeper.MemberMap[subject] = &newnode //[W]
 
 			if subject != 0 {
 				updateMonitors()
 				// introducer is anyway going to send it monitors.
 			}
 			
-			log.Printf("[ME %d] Processed a new members.MemberMap entry vid=%d", myVid, subject)
+			log.Printf("[ME %d] Processed a new zookeeper.MemberMap entry vid=%d", myVid, subject)
 
 		case "JOIN":
 			origin_time, _ := strconv.ParseInt(string(split_message[3]), 10, 64)
@@ -745,15 +745,15 @@ func listenOtherPort() (err error) {
 
 				if subject != myVid {
 					newnode := createMember(split_message[2], split_message[3])
-					members.MemberMap[subject] = &newnode //[W]
+					zookeeper.MemberMap[subject] = &newnode //[W]
 				}
 
-				message := fmt.Sprintf("MEMBER,%d,%s,%d", myVid, myIP, members.MemberMap[myVid].Timestamp)
+				message := fmt.Sprintf("MEMBER,%d,%s,%d", myVid, myIP, zookeeper.MemberMap[myVid].Timestamp)
 				sendMessage(subject, message, num_tries)
 
 				updateMonitors()
 
-				log.Printf("[ME %d] Processed JOIN members.MemberMap entry for vid=%d", myVid, subject)
+				log.Printf("[ME %d] Processed JOIN zookeeper.MemberMap entry for vid=%d", myVid, subject)
 
 				printMembershipList()
 			} 
@@ -766,9 +766,9 @@ func listenOtherPort() (err error) {
 				eventTimeMap[subject] = origin_time
 				disseminate(message)
 
-				_, ok := members.MemberMap[subject]
+				_, ok := zookeeper.MemberMap[subject]
 				if ok {
-					members.MemberMap[subject].Alive = false //[W]
+					zookeeper.MemberMap[subject].Alive = false //[W]
 					
 					_, ok = children[subject]
 					if ok {
@@ -778,7 +778,7 @@ func listenOtherPort() (err error) {
 					if subject == maxID {
 						var i int
 						for i=maxID; i>=0; i-- {
-							if members.MemberMap[i].Alive {
+							if zookeeper.MemberMap[i].Alive {
 								break
 							}
 						}
@@ -795,7 +795,7 @@ func listenOtherPort() (err error) {
 			var Alive = false
 
 			// Checked if it is set as dead in my list, if yes send dead message already
-			if members.MemberMap[subject].Alive == false {
+			if zookeeper.MemberMap[subject].Alive == false {
 				Alive = false
 			} else{
 				var currTime = time.Now().Unix()
@@ -878,7 +878,7 @@ func getmyIP() (string) {
 			}
 		}
 	}
-	return myip
+	return myIp
 }
 
 func main() {
@@ -901,11 +901,11 @@ func main() {
 
 	if myIP == introducer {
 		myVid = 0
-		var node members.MemberNode
+		var node zookeeper.MemberNode
 		node.Ip = myIP
 		node.Timestamp = time.Now().Unix()
 		node.Alive = true
-		members.MemberMap[0] = &node //[W]
+		zookeeper.MemberMap[0] = &node //[W]
 	}
 
 	go sendHeartbeat()
