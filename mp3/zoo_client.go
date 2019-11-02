@@ -14,7 +14,8 @@ import(
 )
 
 var zoo_ip string = "172.22.154.255"
-const portnum = "3074"
+const zoo_portnum = "3075"
+const node_portnum = "3074"
 
 func main(){
 	// write("testfile", "abcdefg", "172.22.154.255", "3074")
@@ -42,13 +43,13 @@ func c_put(localname, sdfsname string){
     Data_r, err := ioutil.ReadAll(file)
 
 	fmt.Printf("Contacting zookeeper with %s to get IPs...\n", sdfsname)
-    ips, timestamp := put_req(sdfsname, getmyIP(), zoo_ip, portnum)
+    ips, timestamp := put_req(sdfsname, getmyIP(), zoo_ip, zoo_portnum)
     
 	fmt.Printf("Got IPs! Copying file to IPs...\n")
     //Write the file to the four nodes
     for _,node_ip := range ips{
     	fmt.Printf("Broadcasting to %s...\n", node_ip)
-    	go write(sdfsname, timestamp, string(Data_r), node_ip, portnum)
+    	go write(sdfsname, timestamp, string(Data_r), node_ip, node_portnum)
     }
     fmt.Printf("Done dispatching PUT broadcasts.\n")
 }
@@ -57,10 +58,10 @@ func c_get(sdfsname, localname string){
 	fmt.Printf("GET: %s, %s\n", sdfsname, localname)
     fmt.Printf("Obtaining best node to get the file from...")
 
-    get_reply := get_req(sdfsname, zoo_ip, portnum)
+    get_reply := get_req(sdfsname, zoo_ip, zoo_portnum)
     fmt.Printf("Got node@%s; Reading file %s from it...\n", get_reply, sdfsname)
 
-    read_reply := read(sdfsname, get_reply, portnum)
+    read_reply := read(sdfsname, get_reply, node_portnum)
     fmt.Printf("Got the data from sdfs %s from node@%s; copying into local %s.\n", sdfsname, get_reply, localname)
 
 	file, err := os.Create(localname)
@@ -83,12 +84,12 @@ func c_get(sdfsname, localname string){
 
 func c_delete(sdfsname string){
 	fmt.Printf("Requesting delete of %s\n", sdfsname)
-	del_req(sdfsname, zoo_ip, portnum)
+	del_req(sdfsname, zoo_ip, zoo_portnum)
 }
 
 func c_ls(sdfsname string){
 	fmt.Printf("Checking where %s is located...\n", sdfsname)
-	fmt.Printf("%s\n", ls_req(sdfsname, zoo_ip, portnum))
+	fmt.Printf("%s\n", ls_req(sdfsname, zoo_ip, zoo_portnum))
 }
 
 

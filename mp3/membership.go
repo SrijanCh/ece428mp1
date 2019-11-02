@@ -44,6 +44,8 @@ var introducerPort = 8082
 var introPingPeriod = 5
 
 var zoo_ip = "172.22.154.255"
+var zoo_portnum = "3075"
+var  node_portnum = "3074"
 
 var myVid int
 var otherPort = 8081
@@ -935,12 +937,20 @@ func main() {
 	}
 	go updateFingerTable()
 
-	//DEPLOY ZOOKEEPER
-	if myIP == zoo_ip {
-		go host_zookeeper()
-	}
-	//ZOOKEEPER END
 
+	//OUR STUFF
+
+		//DEPLOY SDFS
+		go host_sdfs()
+		//SDFSEND
+	
+		//DEPLOY ZOOKEEPER
+		if myIP == zoo_ip {
+			go host_zookeeper()
+		}
+		//ZOOKEEPER END
+
+	//OUR STUFF END
 	sigs := make(chan os.Signal, 1)
 
 	signal.Notify(sigs, syscall.SIGQUIT)
@@ -964,7 +974,7 @@ func main() {
 
 
 //////////////////////////////////////OUR FILE DUMP//////////////////////////////////////////////////
-const portnum = "3074"         
+// const node_portnum = "3074"         
 
 // type MemberNode struct {
 // 	ip string
@@ -1239,17 +1249,17 @@ func (t *Zookeeper) Zoo_get(args Get_args, reply *Get_return) error {
 		(*reply).ip = ""
 	}else{
 		_, b := pick2(fileloc_arr)
-		c0 := get_timestamp(args.Sdfsname, b[0], portnum)
-		c1 := get_timestamp(args.Sdfsname, b[1], portnum)
+		c0 := get_timestamp(args.Sdfsname, b[0], node_portnum)
+		c1 := get_timestamp(args.Sdfsname, b[1], node_portnum)
 		if(c0 == c1){ 		//both are on same consistency
 			(*reply).ip = b[0]
 		} else {				//One needs an update
 			if c0 > c1 {
 				(*reply).ip = b[0]
-				rep_to(args.Sdfsname, b[1], portnum, b[0], portnum)
+				rep_to(args.Sdfsname, b[1], node_portnum, b[0], node_portnum)
 			}else{
 				(*reply).ip = b[1]
-				rep_to(args.Sdfsname, b[0], portnum, b[1], portnum)
+				rep_to(args.Sdfsname, b[0], node_portnum, b[1], node_portnum)
 			}
 		}
 	}
@@ -1268,7 +1278,7 @@ func (t *Zookeeper) Zoo_del(args Del_args, reply *int64) error {
 		fmt.Printf("DEL: No such file found, so success I guess?\n")
 	}else{
 		for i := 0; i < 4; i++{
-			del(args.Sdfsname, (FileTable[args.Sdfsname])[i].ip, portnum)
+			del(args.Sdfsname, (FileTable[args.Sdfsname])[i].ip, node_portnum)
 		}
 		delete(FileTable, args.Sdfsname)
 	}
@@ -1338,11 +1348,25 @@ func host_zookeeper(){
 	rpc.Register(zookeeper) //Registers the Zookeeper as our handler
 	rpc.HandleHTTP() //HTTP format requests
 	fmt.Printf("Zookeeper is up for business! \n"); //Notify user
-	l, e := net.Listen("tcp", ":3074") //Listen to requests on port 3074
+	l, e := net.Listen("tcp", ":" + zoo_portnum) //Listen to requests on port 3075
 	if e != nil {
 		//Error handling
 		log.Fatal("listen error:", e)
 	}
-	fmt.Printf("Serving on port %d\n", 3074); //Notify that we're up
+	fmt.Printf("Serving on port %s\n", zoo_portnum); //Notify that we're up
 	http.Serve(l, nil) //Serve	
+}
+
+func host_sdfs(){
+	sdfsrpc := new(sdfsrpc.Sdfsrpc) //Creates a new Querier object to handle the RPCs for this server
+	rpc.Register(sdfsrpc) //Registers the Querier as our handler
+	rpc.HandleHTTP() //HTTP format requests
+	fmt.Printf("Sdfsrpc server start listening: \n"); //Notify user
+	l, e := net.Listen("tcp", ":" + node_portnum)//3074") //Listen to requests on port 3074
+	if e != nil {
+		//Error handling
+		log.Fatal("listen error:", e)
+	}
+	fmt.Printf("Serving RPC server on port %d\n", 3074); //Notify that we're up
+	http.Serve(l, nil) //Serve
 }
