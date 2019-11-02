@@ -72,7 +72,7 @@ func num_live() int{
 
 func printMemberMap() {
 	fmt.Printf("Zookeeper member list: [\n")
-	for id, ele := range(zookeeper.MemberMap) {
+	for id, ele := range(MemberMap) {
 		fmt.Printf("%d: %s, %d, %t\n", id, ele.Ip, ele.Timestamp, ele.Alive)
 	}
 	fmt.Printf("]\n")
@@ -84,7 +84,7 @@ func pick4() ([]int, []string){
 	var a,b,c,d int
 
 	if (num_live() < 4){
-		fmt.Printf("Not enough live nodes to pick random, %d\n", numlive())
+		fmt.Printf("Not enough live nodes to pick random, %d\n", num_live())
 		for k, v := range MemberMap{
 			if v.Alive{	
 				ret_str = append(ret_str, v.Ip)

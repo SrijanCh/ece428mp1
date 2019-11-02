@@ -1,5 +1,2 @@
-2019/10/30 01:47:39 169.254.136.36
-2019/10/30 01:47:39 [ME 0] Started listening on the otherport 8081
-2019/10/30 01:47:39 [ME 0] Unable to listen on the otherport port 8081
-2019/10/30 01:47:39 Unable to setup listen on the heartbeat port 8080
-2019/10/30 01:47:39 Listening on heartbeat port 8080
+This was the first fucking file; PLEASE PLEASE WORK DAMMIT
+
