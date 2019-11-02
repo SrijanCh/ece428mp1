@@ -39,11 +39,11 @@ type ChildNode struct {
 	timestamp int64
 }
 
-var introducer = "172.22.154.255"
+var introducer = "172.22.155.255"
 var introducerPort = 8082
 var introPingPeriod = 5
 
-var zoo_ip = "172.22.154.255"
+var zoo_ip = "172.22.155.255"
 var zoo_portnum = "3075"
 var  node_portnum = "3074"
 
@@ -1066,7 +1066,7 @@ func pick4() ([]int, []string){
 	a = r.Intn(len(memberMap)-1)+1
 	MemNode, ok := memberMap[a]
 	for !ok || !MemNode.alive{
-		a = r.Intn(len(memberMap))
+		a = r.Intn(len(memberMap)-1)+1
 	}
 	ret_str = append(ret_str, MemNode.ip)
 	ret_int = append(ret_int, a)
@@ -1074,7 +1074,7 @@ func pick4() ([]int, []string){
 	b = r.Intn(len(memberMap)-1)+1
 	MemNode, ok = memberMap[b]
 	for !ok || !MemNode.alive || b == a{
-		b = r.Intn(len(memberMap))
+		b = r.Intn(len(memberMap)-1)+1
 	}
 	ret_str = append(ret_str, MemNode.ip)
 	ret_int = append(ret_int, b)
@@ -1083,7 +1083,7 @@ func pick4() ([]int, []string){
 	c = r.Intn(len(memberMap)-1)+1
 	MemNode, ok = memberMap[c]
 	for !ok || !MemNode.alive || c == a || c == b{
-		c = r.Intn(len(memberMap))
+		c = r.Intn(len(memberMap)-1)+1
 	}
 	ret_str = append(ret_str, MemNode.ip)
 	ret_int = append(ret_int, c)
@@ -1092,7 +1092,7 @@ func pick4() ([]int, []string){
 	d = r.Intn(len(memberMap)-1)+1
 	MemNode, ok = memberMap[d]
 	for !ok || !MemNode.alive || d == a || d == b || d == c{
-		d = r.Intn(len(memberMap))
+		d = r.Intn(len(memberMap)-1)+1
 	}
 	ret_str = append(ret_str, MemNode.ip)
 	ret_int = append(ret_int, d)
@@ -1117,7 +1117,7 @@ func pick3(fileloc_arr [4]FileLoc) ([]int, []string){
 
 	a := r.Intn(len(fileloc_arr)-1)+1
 	for !memberMap[fileloc_arr[a].MemID].alive{
-		a = r.Intn(len(fileloc_arr))
+		a = r.Intn(len(fileloc_arr)-1)+1
 	}
 	ret_int = append(ret_int, a)
 	ret_str = append(ret_str, fileloc_arr[a].ip)
@@ -1125,7 +1125,7 @@ func pick3(fileloc_arr [4]FileLoc) ([]int, []string){
 
 	b := r.Intn(len(fileloc_arr)-1)+1
 	for !memberMap[fileloc_arr[b].MemID].alive || a==b{
-		b = r.Intn(len(fileloc_arr))
+		b = r.Intn(len(fileloc_arr)-1)+1
 	}
 	ret_int = append(ret_int, b)
 	ret_str = append(ret_str, fileloc_arr[b].ip)
@@ -1133,7 +1133,7 @@ func pick3(fileloc_arr [4]FileLoc) ([]int, []string){
 
 	c := r.Intn(len(fileloc_arr)-1)+1
 	for !memberMap[fileloc_arr[c].MemID].alive || c==a || c==b{
-		c = r.Intn(len(fileloc_arr))
+		c = r.Intn(len(fileloc_arr)-1)+1
 	}
 	ret_int = append(ret_int, c)
 	ret_str = append(ret_str, fileloc_arr[c].ip)
@@ -1158,7 +1158,7 @@ func pick2(fileloc_arr [4]FileLoc) ([]int, []string){
 
 	a := r.Intn(len(fileloc_arr)-1)+1
 	for !memberMap[fileloc_arr[a].MemID].alive{
-		a = r.Intn(len(fileloc_arr))
+		a = r.Intn(len(fileloc_arr)-1)+1
 	}
 	ret_int = append(ret_int, a)
 	ret_str = append(ret_str, fileloc_arr[a].ip)
@@ -1166,7 +1166,7 @@ func pick2(fileloc_arr [4]FileLoc) ([]int, []string){
 
 	b := r.Intn(len(fileloc_arr)-1)+1
 	for !memberMap[fileloc_arr[b].MemID].alive || a==b{
-		b = r.Intn(len(fileloc_arr))
+		b = r.Intn(len(fileloc_arr)-1)+1
 	}
 	ret_int = append(ret_int, b)
 	ret_str = append(ret_str, fileloc_arr[b].ip)
