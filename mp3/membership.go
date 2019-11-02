@@ -939,17 +939,15 @@ func main() {
 
 
 	//OUR STUFF
-
-		//DEPLOY SDFS
-		go host_sdfs()
-		//SDFS END
-	
-		//DEPLOY ZOOKEEPER
 		if myIP == zoo_ip {
+			//DEPLOY ZOOKEEPER
 			go host_zookeeper()
+			//ZOOKEEPER END
+		} else {
+			//DEPLOY SDFS
+			go host_sdfs()
+			//SDFS END
 		}
-		//ZOOKEEPER END
-
 	//OUR STUFF END
 	sigs := make(chan os.Signal, 1)
 
@@ -1065,7 +1063,7 @@ func pick4() ([]int, []string){
 	s := rand.NewSource(time.Now().Unix())
 	r := rand.New(s) // initialize local pseudorandom generator
 
-	a = r.Intn(len(memberMap))
+	a = r.Intn(len(memberMap)-1)+1
 	MemNode, ok := memberMap[a]
 	for !ok || !MemNode.alive{
 		a = r.Intn(len(memberMap))
@@ -1073,7 +1071,7 @@ func pick4() ([]int, []string){
 	ret_str = append(ret_str, MemNode.ip)
 	ret_int = append(ret_int, a)
 	
-	b = r.Intn(len(memberMap))
+	b = r.Intn(len(memberMap)-1)+1
 	MemNode, ok = memberMap[b]
 	for !ok || !MemNode.alive || b == a{
 		b = r.Intn(len(memberMap))
@@ -1082,7 +1080,7 @@ func pick4() ([]int, []string){
 	ret_int = append(ret_int, b)
 
 
-	c = r.Intn(len(memberMap))
+	c = r.Intn(len(memberMap)-1)+1
 	MemNode, ok = memberMap[c]
 	for !ok || !MemNode.alive || c == a || c == b{
 		c = r.Intn(len(memberMap))
@@ -1091,7 +1089,7 @@ func pick4() ([]int, []string){
 	ret_int = append(ret_int, c)
 
 
-	d = r.Intn(len(memberMap))
+	d = r.Intn(len(memberMap)-1)+1
 	MemNode, ok = memberMap[d]
 	for !ok || !MemNode.alive || d == a || d == b || d == c{
 		d = r.Intn(len(memberMap))
@@ -1117,7 +1115,7 @@ func pick3(fileloc_arr [4]FileLoc) ([]int, []string){
 	s := rand.NewSource(time.Now().Unix())
 	r := rand.New(s) // initialize local pseudorandom generator
 
-	a := r.Intn(len(fileloc_arr))
+	a := r.Intn(len(fileloc_arr)-1)+1
 	for !memberMap[fileloc_arr[a].MemID].alive{
 		a = r.Intn(len(fileloc_arr))
 	}
@@ -1125,7 +1123,7 @@ func pick3(fileloc_arr [4]FileLoc) ([]int, []string){
 	ret_str = append(ret_str, fileloc_arr[a].ip)
 
 
-	b := r.Intn(len(fileloc_arr))
+	b := r.Intn(len(fileloc_arr)-1)+1
 	for !memberMap[fileloc_arr[b].MemID].alive || a==b{
 		b = r.Intn(len(fileloc_arr))
 	}
@@ -1133,7 +1131,7 @@ func pick3(fileloc_arr [4]FileLoc) ([]int, []string){
 	ret_str = append(ret_str, fileloc_arr[b].ip)
 
 
-	c := r.Intn(len(fileloc_arr))
+	c := r.Intn(len(fileloc_arr)-1)+1
 	for !memberMap[fileloc_arr[c].MemID].alive || c==a || c==b{
 		c = r.Intn(len(fileloc_arr))
 	}
@@ -1158,7 +1156,7 @@ func pick2(fileloc_arr [4]FileLoc) ([]int, []string){
 	s := rand.NewSource(time.Now().Unix())
 	r := rand.New(s) // initialize local pseudorandom generator
 
-	a := r.Intn(len(fileloc_arr))
+	a := r.Intn(len(fileloc_arr)-1)+1
 	for !memberMap[fileloc_arr[a].MemID].alive{
 		a = r.Intn(len(fileloc_arr))
 	}
@@ -1166,7 +1164,7 @@ func pick2(fileloc_arr [4]FileLoc) ([]int, []string){
 	ret_str = append(ret_str, fileloc_arr[a].ip)
 
 
-	b := r.Intn(len(fileloc_arr))
+	b := r.Intn(len(fileloc_arr)-1)+1
 	for !memberMap[fileloc_arr[b].MemID].alive || a==b{
 		b = r.Intn(len(fileloc_arr))
 	}
