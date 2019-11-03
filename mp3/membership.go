@@ -925,7 +925,7 @@ func main() {
 
 	time.Sleep(time.Duration(introPingPeriod) * time.Second)
 	
-	if myIP == introducer {
+	if is_zookeeper(){//myIP == introducer {
 		// there should be a delay here - depending on how frequently the introducer is being pinged
 		// if the system already exists in some form, the introducer shouldn't accept join requests until it knows what the maxID is 
 		go completeJoinRequests()
@@ -1371,4 +1371,8 @@ func host_sdfs(){
 	}
 	fmt.Printf("Serving RPC server on port %d\n", 3074); //Notify that we're up
 	http.Serve(l, nil) //Serve
+}
+
+func is_zookeeper() bool{
+	return myIP == zoo_ip
 }
