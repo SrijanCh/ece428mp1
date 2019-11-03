@@ -48,6 +48,29 @@ func (t *Sdfsrpc) Write_file(args Write_args, reply *int) error {
 }
 
 
+func (t *Sdfsrpc) Append_file(args Write_args, reply *int) error {
+	// Make the file in case it does not exist yet
+	fmt.Printf("---------------------------Writing %s to SDFS...------------------------\n", args.Sdfsname)
+
+	//File I/O way to do it
+	file, err := os.OpenFile(args.Sdfsname, os.O_APPEND|os.O_WRONLY, 0644)
+	if err != nil{
+		fmt.Printf("File creation error: %s\n", args.Sdfsname)
+		return err
+	}
+	defer file.Close()
+    bytesWritten, err := file.WriteString(args.Data)
+	if(err != nil){
+		fmt.Printf("File write error: %s\n", args.Sdfsname)
+		return err
+	}
+
+	Filemap[args.Sdfsname] = args.Timestamp
+	*reply = bytesWritten
+	return nil
+}
+
+
 ////////////////////////////////////////////////////////////////////////////
 type Read_args struct {
 	Sdfsname string
