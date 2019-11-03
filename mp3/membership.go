@@ -1230,6 +1230,9 @@ func (t *Zookeeper) Zoo_put(args Put_args, reply *Put_return) error {
 		f[a[2]] = FileLoc{fileloc_arr[a[2]].MemID, fileloc_arr[a[2]].ip, c}
 		f[miss] = FileLoc{fileloc_arr[miss].MemID, fileloc_arr[miss].ip, c}
 		FileTable[args.Sdfsname] = f
+
+		fmt.Println("The new table: ", FileTable[args.Sdfsname])
+
 		(*reply).Ips = b
 		(*reply).Timestamp = c
 	}
