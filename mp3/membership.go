@@ -1228,7 +1228,7 @@ func (t *Zookeeper) Zoo_put(args Put_args, reply *Put_return) error {
 		f[a[0]] = FileLoc{fileloc_arr[a[0]].MemID, fileloc_arr[a[0]].ip, c}
 		f[a[1]] = FileLoc{fileloc_arr[a[1]].MemID, fileloc_arr[a[1]].ip, c}
 		f[a[2]] = FileLoc{fileloc_arr[a[2]].MemID, fileloc_arr[a[2]].ip, c}
-		f[miss] = FileLoc{fileloc_arr[miss].MemID, fileloc_arr[miss].ip, c}
+		f[miss] = FileLoc{fileloc_arr[miss].MemID, fileloc_arr[miss].ip, fileloc_arr[miss].Timestamp}
 		FileTable[args.Sdfsname] = f
 
 		fmt.Println("The new table: ", FileTable[args.Sdfsname])
