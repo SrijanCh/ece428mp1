@@ -8,7 +8,7 @@ import(
 	"fmt"
 	// "time"
 	"os"
-	"zookeeper"
+	// "zookeeper"
     "io/ioutil"
 	// "log"	
 )
@@ -93,6 +93,15 @@ func c_ls(sdfsname string){
 }
 
 
+type Put_args struct{
+	Sdfsname, Call_ip string
+}
+
+type Put_return struct{
+	Ips []string
+	Timestamp int64
+}
+
 func put_req(sdfsname, my_ip, ip, port string) ([]string, int64){
 	fmt.Printf("------------Put req----------------")
 	client, err := rpc.DialHTTP("tcp", ip + ":" + port) //Connect to given address
@@ -100,17 +109,30 @@ func put_req(sdfsname, my_ip, ip, port string) ([]string, int64){
 		log.Fatal(err)
 	}
 	// Synchronous call***************************************
-	var args = zookeeper.Put_args{Sdfsname: sdfsname, Call_ip: my_ip} //Create the args gob to send over to the RPC
-	var reply zookeeper.Put_return //Create a container for our results
+	var args = Put_args{Sdfsname: sdfsname, Call_ip: my_ip} //Create the args gob to send over to the RPC
+	var reply Put_return //Create a container for our results
 	fmt.Printf("Put_req args: %s, %s", sdfsname, my_ip)
 	err = client.Call("Zookeeper.Zoo_put", args, &reply) //Make the remote call
 	if err != nil{
 		log.Fatal(err)
 	}
-	fmt.Printf("Put_req reply: ", reply.Ips)
+
+	fmt.Printf("Put_req reply: \n")
+	for j,_ := range reply.Ips{
+		fmt.Printf("%s\n", (reply.Ips)[j])
+	}
+
 	return reply.Ips, reply.Timestamp
 }
 
+
+type Get_args struct{
+	Sdfsname string
+}
+
+type Get_return struct{
+	Ip string
+}
 
 func get_req(sdfsname, ip, port string) (string){
 	client, err := rpc.DialHTTP("tcp", ip + ":" + port) //Connect to given address
@@ -118,13 +140,17 @@ func get_req(sdfsname, ip, port string) (string){
 		log.Fatal(err)
 	}
 	// Synchronous call***************************************
-	var args = zookeeper.Get_args{Sdfsname: sdfsname} //Create the args gob to send over to the RPC
-	var reply zookeeper.Get_return //Create a container for our results
+	var args = Get_args{Sdfsname: sdfsname} //Create the args gob to send over to the RPC
+	var reply Get_return //Create a container for our results
 	err = client.Call("Zookeeper.Zoo_get", args, &reply) //Make the remote call
 	if err != nil{
 		log.Fatal(err)
 	}
 	return reply.Ip
+}
+
+type Del_args struct{
+	Sdfsname string
 }
 
 func del_req(sdfsname, ip, port string) int64{
@@ -133,7 +159,7 @@ func del_req(sdfsname, ip, port string) int64{
 		log.Fatal(err)
 	}
 	// Synchronous call***************************************
-	var args = zookeeper.Del_args{Sdfsname: sdfsname} //Create the args gob to send over to the RPC
+	var args = Del_args{Sdfsname: sdfsname} //Create the args gob to send over to the RPC
 	var reply int64 //Create a container for our results
 	err = client.Call("Zookeeper.Zoo_del", args, &reply) //Make the remote call
 	if err != nil{
@@ -142,13 +168,17 @@ func del_req(sdfsname, ip, port string) int64{
 	return reply
 }
 
+type Ls_args struct{
+	Sdfsname string
+}
+
 func ls_req(sdfsname, ip, port string) string{
 	client, err := rpc.DialHTTP("tcp", ip + ":" + port) //Connect to given address
 	if err != nil {
 		log.Fatal(err)
 	}
 	// Synchronous call***************************************
-	var args = zookeeper.Del_args{Sdfsname: sdfsname} //Create the args gob to send over to the RPC
+	var args = Ls_args{Sdfsname: sdfsname} //Create the args gob to send over to the RPC
 	var reply string //Create a container for our results
 	err = client.Call("Zookeeper.Zoo_ls", args, &reply) //Make the remote call
 	if err != nil{

@@ -1137,8 +1137,8 @@ func pick3(fileloc_arr [4]FileLoc) ([]int, []string){
 	for !memberMap[fileloc_arr[c].MemID].alive || c==a || c==b{
 		c = r.Intn(len(fileloc_arr)-1)+1
 	}
-	ret_int[3] = c
-	ret_str[3] = fileloc_arr[c].ip
+	ret_int[2] = c
+	ret_str[2] = fileloc_arr[c].ip
 
 
 	fmt.Printf("Picked [(%d, MemID %d) %s,%s] [(%d, MemID %d) %s,%s] [(%d, MemID %d) %s,%s]\n",  			
@@ -1186,7 +1186,7 @@ type Put_args struct{
 }
 
 type Put_return struct{
-	ips []string
+	Ips []string
 	Timestamp int64
 }
 
@@ -1200,7 +1200,6 @@ type Put_return struct{
 //		If late update (>1):	pick 3 of 4 nodes and return IP list
 // 		If early update (<1):	Ask for confirm; wait 30 secs, if confirm arrives, send 3 of 4 IPs, else send 0 IPs
 func (t *Zookeeper) Zoo_put(args Put_args, reply *Put_return) error {
-
 	//Just a check-in for a handled request
 	if fileloc_arr, ok := FileTable[args.Sdfsname]; !ok { //NEW PUT
 		a, b := pick4()
@@ -1213,18 +1212,18 @@ func (t *Zookeeper) Zoo_put(args Put_args, reply *Put_return) error {
 		f[2] = FileLoc{a[2], b[2], c}
 		f[3] = FileLoc{a[3], b[3], c}
 		FileTable[args.Sdfsname] = f
-		(*reply).ips = b
+		(*reply).Ips = b
+		fmt.Println("(*reply).Ips: ", (*reply).Ips)
 		(*reply).Timestamp = c
 	}else{									   //UPDATE (QUORUM)
 		//Check on timestamp to see when last write was
-
 		//Pick random 3 because Quorum
 		a, b := pick3(fileloc_arr)
 		c := int64(time.Now().Nanosecond())
 		fileloc_arr[a[0]].Timestamp = c
 		fileloc_arr[a[1]].Timestamp = c
 		fileloc_arr[a[2]].Timestamp = c
-		(*reply).ips = b
+		(*reply).Ips = b
 		(*reply).Timestamp = c
 	}
 
@@ -1239,8 +1238,9 @@ type Get_args struct{
 }
 
 type Get_return struct{
-	ip string
+	Ip string
 }
+
 // 2) get sdfsfilename localfilename (fetches to local dir)
 //		2 fetches (quorum)
 //		update lesser timestamp if timestamps not equal (write)
@@ -1248,19 +1248,19 @@ func (t *Zookeeper) Zoo_get(args Get_args, reply *Get_return) error {
 
 	if fileloc_arr, ok := FileTable[args.Sdfsname]; !ok { //Invalid file
 		fmt.Printf("GET: No such file found\n")
-		(*reply).ip = ""
+		(*reply).Ip = ""
 	}else{
 		_, b := pick2(fileloc_arr)
 		c0 := get_timestamp(args.Sdfsname, b[0], node_portnum)
 		c1 := get_timestamp(args.Sdfsname, b[1], node_portnum)
 		if(c0 == c1){ 		//both are on same consistency
-			(*reply).ip = b[0]
+			(*reply).Ip = b[0]
 		} else {				//One needs an update
 			if c0 > c1 {
-				(*reply).ip = b[0]
+				(*reply).Ip = b[0]
 				rep_to(args.Sdfsname, b[1], node_portnum, b[0], node_portnum)
 			}else{
-				(*reply).ip = b[1]
+				(*reply).Ip = b[1]
 				rep_to(args.Sdfsname, b[0], node_portnum, b[1], node_portnum)
 			}
 		}
