@@ -1220,12 +1220,16 @@ func (t *Zookeeper) Zoo_put(args Put_args, reply *Put_return) error {
 	}else{									   //UPDATE (QUORUM)
 		//Check on timestamp to see when last write was
 		//Pick random 3 because Quorum
-		a, b := pick3(fileloc_arr)
+		a, b := pick3(FileTable[args.Sdfsname])
 		c := int64(time.Now().Nanosecond())
 		fmt.Printf("PUT: THIS (REWRITE) TIMESTAMP IS %d\n", c)
-		fileloc_arr[a[0]].Timestamp = c
-		fileloc_arr[a[1]].Timestamp = c
-		fileloc_arr[a[2]].Timestamp = c
+		var f [4]FileLoc
+		miss := 6 - a[0] - a[1] - a[2]
+		f[a[0]] = FileLoc{fileloc_arr[a[0]].MemID, fileloc_arr[a[0]].ip, c}
+		f[a[1]] = FileLoc{fileloc_arr[a[1]].MemID, fileloc_arr[a[1]].ip, c}
+		f[a[2]] = FileLoc{fileloc_arr[a[2]].MemID, fileloc_arr[a[2]].ip, c}
+		f[miss] = FileLoc{fileloc_arr[miss].MemID, fileloc_arr[miss].ip, c}
+		FileTable[args.Sdfsname] = f
 		(*reply).Ips = b
 		(*reply).Timestamp = c
 	}
