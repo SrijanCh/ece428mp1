@@ -1310,6 +1310,26 @@ func (t* Zookeeper) Zoo_ls(args Ls_args, reply *string) error{
 // 5) store: At any machine, list all files currently being stored at this
 // machine. Here sdfsfilename is an arbitrary string while localfilename is
 // the Unix-style local file system name.
+type Store_args struct {
+    Node_ip string
+}
+
+func (t *Zookeeper) Zoo_store(args Store_args, reply *string) error {
+    *reply = store(args.Node_ip, node_portnum)
+    return nil
+}
+
+// Gather all the files stored at the specified ip address
+func store(ip, port string) int64 {
+    client, err := rpc.DialHTTP("tcp", ip + ":" + port)
+    if err != nil {
+        return -1
+    }
+    var args = sdfsrpc.Read_args{Node_ip: ip}
+    var reply int64
+    _ = client.Call("Sdfsrpc.Get_store", args, &reply)
+    return reply
+}
 
 func del(filename, ip, port string) int64{
 	client, err := rpc.DialHTTP("tcp", ip + ":" + port) //Connect to given address

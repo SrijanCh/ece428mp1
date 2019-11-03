@@ -51,6 +51,12 @@ func parse_command(command string) {
         } else {
             c_ls(split_command[1])
         }
+    } else if "store" == split_command[0] {
+        if len(split_command) != 2 {
+            fmt.Printf("Invalid number of args for store\n")
+        } else {
+            c_store(split_command[1])
+        }
     } else {
         fmt.Printf("Invalid command\n")
     }
@@ -136,6 +142,10 @@ func c_ls(sdfsname string){
 	fmt.Printf("%s\n", ls_req(sdfsname, zoo_ip, zoo_portnum))
 }
 
+func c_store(ip string){
+    fmt.Printf("Getting all file names at node ip %s\n", ip)
+    fmt.Printf("%s\n", store_req(ip, zoo_ip, zoo_portnum))
+}
 
 type Put_args struct{
 	Sdfsname, Call_ip string
@@ -231,6 +241,24 @@ func ls_req(sdfsname, ip, port string) string{
 	return reply
 }
 
+type Store_args struct {
+    Node_ip string
+}
+
+func store_req(node_ip, ip, port string) string {
+    client, err := rpc.DialHTTP("tcp", ip + ":" + port)
+    if err != nil {
+        log.Fatal(err)
+    }
+    // no args needed
+    var args = Store_args{Node_ip: node_ip}
+    var reply string
+    err = client.Call("Zookeeper.Zoo_store", args, &reply)
+    if err != nil {
+        log.Fatal(err)
+    }
+    return reply
+}
 
 func write(filename string, ts int64, data, ip, port string) int{
 	client, err := rpc.DialHTTP("tcp", ip + ":" + port) //Connect to given address
