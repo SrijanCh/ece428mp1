@@ -1067,36 +1067,36 @@ func pick4() ([]int, []string){
 
 	a = r.Intn(len(memberMap)-1)+1
 	MemNode, ok := memberMap[a]
-	for !ok || !MemNode.alive{
+	for !ok || !(*MemNode).alive{
 		a = r.Intn(len(memberMap)-1)+1
 	}
-	ret_str = append(ret_str, MemNode.ip)
+	ret_str = append(ret_str, (*MemNode).ip)
 	ret_int = append(ret_int, a)
 	
 	b = r.Intn(len(memberMap)-1)+1
 	MemNode, ok = memberMap[b]
-	for !ok || !MemNode.alive || b == a{
+	for !ok || !(*MemNode).alive || b == a{
 		b = r.Intn(len(memberMap)-1)+1
 	}
-	ret_str = append(ret_str, MemNode.ip)
+	ret_str = append(ret_str, (*MemNode).ip)
 	ret_int = append(ret_int, b)
 
 
 	c = r.Intn(len(memberMap)-1)+1
 	MemNode, ok = memberMap[c]
-	for !ok || !MemNode.alive || c == a || c == b{
+	for !ok || !(*MemNode).alive || c == a || c == b{
 		c = r.Intn(len(memberMap)-1)+1
 	}
-	ret_str = append(ret_str, MemNode.ip)
+	ret_str = append(ret_str, (*MemNode).ip)
 	ret_int = append(ret_int, c)
 
 
 	d = r.Intn(len(memberMap)-1)+1
 	MemNode, ok = memberMap[d]
-	for !ok || !MemNode.alive || d == a || d == b || d == c{
+	for !ok || !(*MemNode).alive || d == a || d == b || d == c{
 		d = r.Intn(len(memberMap)-1)+1
 	}
-	ret_str = append(ret_str, MemNode.ip)
+	ret_str = append(ret_str, (*MemNode).ip)
 	ret_int = append(ret_int, d)
 
 	fmt.Printf("Picked [(%d,%d) %s,%s] [(%d,%d) %s,%s] [(%d,%d) %s,%s] and [(%d,%d) %s,%s]\n", a, ret_int[0], 
