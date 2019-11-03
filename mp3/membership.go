@@ -43,6 +43,10 @@ var introducer = "172.22.154.255"
 var introducerPort = 8082
 var introPingPeriod = 5
 
+//172.22.156.255
+//172.22.153.4
+//172.22.155.0
+
 var zoo_ip = "172.22.154.255"
 var zoo_portnum = "3075"
 var  node_portnum = "3074"
@@ -959,7 +963,7 @@ func main() {
 
 
 	//OUR STUFF
-		if myIP == zoo_ip {
+		if is_zookeeper(){
 			log.Printf("Starting Zookeeper\n")
 			//DEPLOY ZOOKEEPER
 			go host_zookeeper()
@@ -1351,6 +1355,17 @@ func (t* Zookeeper) Zoo_store(args Store_args, reply *string) error {
     return nil
 }
 
+
+type Table_args struct{
+	table map[string]([4]FileLoc)
+}
+func (t* Zookeeper) Zoo_update_table(args Table_args, reply *string) error {
+    fmt.Println(args.table)
+    FileTable = args.table
+    *reply = ""
+    return nil
+}
+
 // Gather all the files stored at the specified ip address
 func store(ip, port string) string {
 	fmt.Printf("Get_store, ip: %s, port %s...\n", ip, port)
@@ -1388,21 +1403,21 @@ func maxtime (a int64, b int64) int64 {
 }
 
 func put_confirm (sdfsname string) bool {
-    var ts int64
-    ts = 0
-    // find latest updated node
-    if _, ok := FileTable[sdfsname]; ok {
-        for i  := 0; i < 4; i++ {
-            ts = maxtime(ts, FileTable[sdfsname][i].Timestamp)
-        }
-        // If the time for the latest updated node is less than a minute ago, send the warning message by replying with true
-        if ts - time.Now().UnixNano() < 60000000000 {
-            return true
-        }
-        return false
-    } else {
-        return false
-    }
+	if _, ok := FileTable[sdfsname]; ok {
+    	var ts int64
+    	ts = 0
+    	// find latest updated node
+    	for i  := 0; i < 4; i++ {
+    	    ts = maxtime(ts, FileTable[sdfsname][i].Timestamp)
+    	}
+    	// If the time for the latest updated node is less than a minute ago, send the warning message by replying with true
+    	if ts - time.Now().UnixNano() < 60000000000 {
+    	    return true
+    	}
+    	return false
+	} else {
+		return false
+	}
 }
 
 func del(filename, ip, port string) int64{
