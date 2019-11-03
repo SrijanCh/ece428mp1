@@ -1334,6 +1334,7 @@ func (t* Zookeeper) Zoo_store(args Store_args, reply *string) error {
 
 // Gather all the files stored at the specified ip address
 func store(ip, port string) string {
+	fmt.Printf("Get_store, ip: %s, port %s...\n", ip, port)
     client, err := rpc.DialHTTP("tcp", ip + ":" + port)
     if err != nil {
         return ""
@@ -1341,6 +1342,7 @@ func store(ip, port string) string {
     var args = sdfsrpc.Read_args{Sdfsname: ip}
     var reply string
     _ = client.Call("Sdfsrpc.Get_store", args, &reply)
+	fmt.Printf("Got reply %s...\n", reply)
     return reply
 }
 

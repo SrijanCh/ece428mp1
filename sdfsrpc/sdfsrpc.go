@@ -135,6 +135,7 @@ func (t *Sdfsrpc) Get_store(args int, reply *string) error {
 	for k, _ := range Filemap{
 		(*reply) += k + "\n"
 	}
+	fmt.Printf("Get_store returning %s\n", (*reply))
 	return nil
 }
 
