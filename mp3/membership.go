@@ -1250,9 +1250,9 @@ func (t *Zookeeper) Zoo_get(args Get_args, reply *Get_return) error {
 		fmt.Printf("GET: No such file found\n")
 		(*reply).Ip = ""
 	}else{
-		_, b := pick2(fileloc_arr)
-		c0 := get_timestamp(args.Sdfsname, b[0], node_portnum)
-		c1 := get_timestamp(args.Sdfsname, b[1], node_portnum)
+		a, b := pick2(fileloc_arr)
+		c0 := ((FileTable[args.Sdfsname])[a[0]]).Timestamp//get_timestamp(args.Sdfsname, b[0], node_portnum)
+		c1 := ((FileTable[args.Sdfsname])[a[1]]).Timestamp//get_timestamp(args.Sdfsname, b[1], node_portnum)
 		if(c0 == c1){ 		//both are on same consistency
 			(*reply).Ip = b[0]
 		} else {				//One needs an update
