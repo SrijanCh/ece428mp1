@@ -1204,6 +1204,8 @@ func (t *Zookeeper) Zoo_put(args Put_args, reply *Put_return) error {
 	//Just a check-in for a handled request
 	if fileloc_arr, ok := FileTable[args.Sdfsname]; !ok { //NEW PUT
 		a, b := pick4()
+		fmt.Println("a: ", a)
+		fmt.Println("b: ", b)
 		c := int64(time.Now().Nanosecond())
 		var f [4]FileLoc
 		f[0] = FileLoc{a[0], b[0], c}
