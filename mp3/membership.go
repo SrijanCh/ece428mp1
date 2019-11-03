@@ -199,8 +199,9 @@ func checkSuspicion(vid int) {
 			updateMonitors()
 
 			//PUT OUR REPLICATE HERE
-			handle_fail(ip_addr)
-
+			if(is_zookeeper()){
+				handle_fail(ip_addr)
+			}
 			break
 		}
 	}
@@ -811,7 +812,9 @@ func listenOtherPort() (err error) {
 					updateMonitors()
 
 					//PUT OUR REPLICATE HERE
-					handle_fail(ip_addr)
+					if(is_zookeeper()){
+						handle_fail(ip_addr)
+					}
 					
 					log.Printf("[ME %d] Processed %s for %d, maxID = %d", myVid, message_type, subject, maxID)
 				}
