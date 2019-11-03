@@ -925,7 +925,7 @@ func main() {
 
 	time.Sleep(time.Duration(introPingPeriod) * time.Second)
 	
-	if myIP == introducer {
+	if is_zookeeper(){//myIP == introducer {
 		// there should be a delay here - depending on how frequently the introducer is being pinged
 		// if the system already exists in some form, the introducer shouldn't accept join requests until it knows what the maxID is 
 		go completeJoinRequests()
@@ -1117,25 +1117,25 @@ func pick3(fileloc_arr [4]FileLoc) ([]int, []string){
 	s := rand.NewSource(time.Now().Unix())
 	r := rand.New(s) // initialize local pseudorandom generator
 
-	a := r.Intn(len(fileloc_arr)-1)+1
+	a := r.Intn(len(fileloc_arr))
 	for !memberMap[fileloc_arr[a].MemID].alive{
-		a = r.Intn(len(fileloc_arr)-1)+1
+		a = r.Intn(len(fileloc_arr))
 	}
 	ret_int[0] = a
 	ret_str[0] = fileloc_arr[a].ip
 
 
-	b := r.Intn(len(fileloc_arr)-1)+1
+	b := r.Intn(len(fileloc_arr))
 	for !memberMap[fileloc_arr[b].MemID].alive || a==b{
-		b = r.Intn(len(fileloc_arr)-1)+1
+		b = r.Intn(len(fileloc_arr))
 	}
 	ret_int[1] = b
 	ret_str[1] = fileloc_arr[b].ip
 
 
-	c := r.Intn(len(fileloc_arr)-1)+1
+	c := r.Intn(len(fileloc_arr))
 	for !memberMap[fileloc_arr[c].MemID].alive || c==a || c==b{
-		c = r.Intn(len(fileloc_arr)-1)+1
+		c = r.Intn(len(fileloc_arr))
 	}
 	ret_int[2] = c
 	ret_str[2] = fileloc_arr[c].ip
@@ -1158,17 +1158,17 @@ func pick2(fileloc_arr [4]FileLoc) ([]int, []string){
 	s := rand.NewSource(time.Now().Unix())
 	r := rand.New(s) // initialize local pseudorandom generator
 
-	a := r.Intn(len(fileloc_arr)-1)+1
+	a := r.Intn(len(fileloc_arr))
 	for !memberMap[fileloc_arr[a].MemID].alive{
-		a = r.Intn(len(fileloc_arr)-1)+1
+		a = r.Intn(len(fileloc_arr))
 	}
 	ret_int[0] = a
 	ret_str[0] = fileloc_arr[a].ip
 
 
-	b := r.Intn(len(fileloc_arr)-1)+1
+	b := r.Intn(len(fileloc_arr))
 	for !memberMap[fileloc_arr[b].MemID].alive || a==b{
-		b = r.Intn(len(fileloc_arr)-1)+1
+		b = r.Intn(len(fileloc_arr))
 	}
 	ret_int[1] = b
 	ret_str[1] = fileloc_arr[b].ip
@@ -1371,4 +1371,8 @@ func host_sdfs(){
 	}
 	fmt.Printf("Serving RPC server on port %d\n", 3074); //Notify that we're up
 	http.Serve(l, nil) //Serve
+}
+
+func is_zookeeper() bool{
+	return myIP == zoo_ip
 }
