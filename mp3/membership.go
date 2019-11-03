@@ -1174,10 +1174,11 @@ func pick2(fileloc_arr [4]FileLoc) ([]int, []string){
 	ret_str[1] = fileloc_arr[b].ip
 
 	
-	fmt.Printf("Picked [(%d, MemID %d) %s,%s] [(%d, MemID %d) %s,%s]\n", 	a, fileloc_arr[a].MemID,
+	fmt.Printf("Picked [(%d, MemID %d) %s,%s] [(%d, MemID %d) %s,%s TIMESTAMPS %d, %d]\n", 	a, fileloc_arr[a].MemID,
 																		    fileloc_arr[a].ip, ret_str[0],
 																		    b, fileloc_arr[b].MemID,
-																		    fileloc_arr[b].ip, ret_str[1])
+																		    fileloc_arr[b].ip, ret_str[1],
+																			fileloc_arr[a].Timestamp, fileloc_arr[b].Timestamp)
 	return ret_int, ret_str
 }
 
@@ -1206,6 +1207,7 @@ func (t *Zookeeper) Zoo_put(args Put_args, reply *Put_return) error {
 		fmt.Println("a: ", a)
 		fmt.Println("b: ", b)
 		c := int64(time.Now().Nanosecond())
+		fmt.Printf("PUT: THIS TIMESTAMP IS %d\n", c)
 		var f [4]FileLoc
 		f[0] = FileLoc{a[0], b[0], c}
 		f[1] = FileLoc{a[1], b[1], c}
@@ -1218,11 +1220,19 @@ func (t *Zookeeper) Zoo_put(args Put_args, reply *Put_return) error {
 	}else{									   //UPDATE (QUORUM)
 		//Check on timestamp to see when last write was
 		//Pick random 3 because Quorum
-		a, b := pick3(fileloc_arr)
+		a, b := pick3(FileTable[args.Sdfsname])
 		c := int64(time.Now().Nanosecond())
-		fileloc_arr[a[0]].Timestamp = c
-		fileloc_arr[a[1]].Timestamp = c
-		fileloc_arr[a[2]].Timestamp = c
+		fmt.Printf("PUT: THIS (REWRITE) TIMESTAMP IS %d\n", c)
+		var f [4]FileLoc
+		miss := 6 - a[0] - a[1] - a[2]
+		f[a[0]] = FileLoc{fileloc_arr[a[0]].MemID, fileloc_arr[a[0]].ip, c}
+		f[a[1]] = FileLoc{fileloc_arr[a[1]].MemID, fileloc_arr[a[1]].ip, c}
+		f[a[2]] = FileLoc{fileloc_arr[a[2]].MemID, fileloc_arr[a[2]].ip, c}
+		f[miss] = FileLoc{fileloc_arr[miss].MemID, fileloc_arr[miss].ip, fileloc_arr[miss].Timestamp}
+		FileTable[args.Sdfsname] = f
+
+		fmt.Println("The new table: ", FileTable[args.Sdfsname])
+
 		(*reply).Ips = b
 		(*reply).Timestamp = c
 	}
@@ -1250,16 +1260,19 @@ func (t *Zookeeper) Zoo_get(args Get_args, reply *Get_return) error {
 		fmt.Printf("GET: No such file found\n")
 		(*reply).Ip = ""
 	}else{
-		_, b := pick2(fileloc_arr)
-		c0 := get_timestamp(args.Sdfsname, b[0], node_portnum)
-		c1 := get_timestamp(args.Sdfsname, b[1], node_portnum)
+		a, b := pick2(fileloc_arr)
+		c0 := ((FileTable[args.Sdfsname])[a[0]]).Timestamp//get_timestamp(args.Sdfsname, b[0], node_portnum)
+		c1 := ((FileTable[args.Sdfsname])[a[1]]).Timestamp//get_timestamp(args.Sdfsname, b[1], node_portnum)
 		if(c0 == c1){ 		//both are on same consistency
+			fmt.Printf("Equal timestamps!\n")
 			(*reply).Ip = b[0]
 		} else {				//One needs an update
 			if c0 > c1 {
+				fmt.Printf("c0 is more recent\n")
 				(*reply).Ip = b[0]
 				rep_to(args.Sdfsname, b[1], node_portnum, b[0], node_portnum)
 			}else{
+				fmt.Printf("c1 is more recent\n")
 				(*reply).Ip = b[1]
 				rep_to(args.Sdfsname, b[0], node_portnum, b[1], node_portnum)
 			}

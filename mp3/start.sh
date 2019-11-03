@@ -1,4 +1,4 @@
-i=1
+i=2
 while [ $i -lt 11 ]; do
     num=$i
     if [ $i -lt 10 ]; then
