@@ -1207,6 +1207,7 @@ func (t *Zookeeper) Zoo_put(args Put_args, reply *Put_return) error {
 		fmt.Println("a: ", a)
 		fmt.Println("b: ", b)
 		c := int64(time.Now().Nanosecond())
+		fmt.Printf("PUT: THIS TIMESTAMP IS %d\n", c)
 		var f [4]FileLoc
 		f[0] = FileLoc{a[0], b[0], c}
 		f[1] = FileLoc{a[1], b[1], c}
@@ -1221,6 +1222,7 @@ func (t *Zookeeper) Zoo_put(args Put_args, reply *Put_return) error {
 		//Pick random 3 because Quorum
 		a, b := pick3(fileloc_arr)
 		c := int64(time.Now().Nanosecond())
+		fmt.Printf("PUT: THIS (REWRITE) TIMESTAMP IS %d\n", c)
 		fileloc_arr[a[0]].Timestamp = c
 		fileloc_arr[a[1]].Timestamp = c
 		fileloc_arr[a[2]].Timestamp = c
