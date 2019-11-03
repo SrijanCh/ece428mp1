@@ -1066,38 +1066,38 @@ func pick4() ([]int, []string){
 	r := rand.New(s) // initialize local pseudorandom generator
 
 	a = r.Intn(len(memberMap)-1)+1
-	MemNode, ok := memberMap[a]
-	for !ok || !(*MemNode).alive{
+	_, ok := memberMap[a]
+	for !ok || !memberMap[a].alive{
 		a = r.Intn(len(memberMap)-1)+1
 	}
-	ret_str = append(ret_str, (*MemNode).ip)
-	ret_int = append(ret_int, a)
+	ret_str[0] = memberMap[a].ip
+	ret_int[0] = a
 	
 	b = r.Intn(len(memberMap)-1)+1
-	MemNode, ok = memberMap[b]
-	for !ok || !(*MemNode).alive || b == a{
+	_, ok = memberMap[b]
+	for !ok || !memberMap[b].alive || b == a{
 		b = r.Intn(len(memberMap)-1)+1
 	}
-	ret_str = append(ret_str, (*MemNode).ip)
-	ret_int = append(ret_int, b)
+	ret_str[1] = memberMap[b].ip
+	ret_int[1] = b
 
 
 	c = r.Intn(len(memberMap)-1)+1
-	MemNode, ok = memberMap[c]
-	for !ok || !(*MemNode).alive || c == a || c == b{
+	_, ok = memberMap[c]
+	for !ok || !memberMap[c].alive || c == a || c == b{
 		c = r.Intn(len(memberMap)-1)+1
 	}
-	ret_str = append(ret_str, (*MemNode).ip)
-	ret_int = append(ret_int, c)
+	ret_str[2] = memberMap[c].ip
+	ret_int[2] = c
 
 
 	d = r.Intn(len(memberMap)-1)+1
-	MemNode, ok = memberMap[d]
-	for !ok || !(*MemNode).alive || d == a || d == b || d == c{
+	_, ok = memberMap[d]
+	for !ok || !memberMap[d].alive || d == a || d == b || d == c{
 		d = r.Intn(len(memberMap)-1)+1
 	}
-	ret_str = append(ret_str, (*MemNode).ip)
-	ret_int = append(ret_int, d)
+	ret_str[3] = memberMap[d].ip
+	ret_int[3] = d
 
 	fmt.Printf("Picked [(%d,%d) %s,%s] [(%d,%d) %s,%s] [(%d,%d) %s,%s] and [(%d,%d) %s,%s]\n", a, ret_int[0], 
 																							   memberMap[a].ip, ret_str[0],
@@ -1121,24 +1121,24 @@ func pick3(fileloc_arr [4]FileLoc) ([]int, []string){
 	for !memberMap[fileloc_arr[a].MemID].alive{
 		a = r.Intn(len(fileloc_arr)-1)+1
 	}
-	ret_int = append(ret_int, a)
-	ret_str = append(ret_str, fileloc_arr[a].ip)
+	ret_int[0] = a
+	ret_str[0] = fileloc_arr[a].ip
 
 
 	b := r.Intn(len(fileloc_arr)-1)+1
 	for !memberMap[fileloc_arr[b].MemID].alive || a==b{
 		b = r.Intn(len(fileloc_arr)-1)+1
 	}
-	ret_int = append(ret_int, b)
-	ret_str = append(ret_str, fileloc_arr[b].ip)
+	ret_int[1] = b
+	ret_str[1] = fileloc_arr[b].ip
 
 
 	c := r.Intn(len(fileloc_arr)-1)+1
 	for !memberMap[fileloc_arr[c].MemID].alive || c==a || c==b{
 		c = r.Intn(len(fileloc_arr)-1)+1
 	}
-	ret_int = append(ret_int, c)
-	ret_str = append(ret_str, fileloc_arr[c].ip)
+	ret_int[3] = c
+	ret_str[3] = fileloc_arr[c].ip
 
 
 	fmt.Printf("Picked [(%d, MemID %d) %s,%s] [(%d, MemID %d) %s,%s] [(%d, MemID %d) %s,%s]\n",  			
@@ -1162,16 +1162,16 @@ func pick2(fileloc_arr [4]FileLoc) ([]int, []string){
 	for !memberMap[fileloc_arr[a].MemID].alive{
 		a = r.Intn(len(fileloc_arr)-1)+1
 	}
-	ret_int = append(ret_int, a)
-	ret_str = append(ret_str, fileloc_arr[a].ip)
+	ret_int[0] = a
+	ret_str[0] = fileloc_arr[a].ip
 
 
 	b := r.Intn(len(fileloc_arr)-1)+1
 	for !memberMap[fileloc_arr[b].MemID].alive || a==b{
 		b = r.Intn(len(fileloc_arr)-1)+1
 	}
-	ret_int = append(ret_int, b)
-	ret_str = append(ret_str, fileloc_arr[b].ip)
+	ret_int[1] = b
+	ret_str[1] = fileloc_arr[b].ip
 
 	
 	fmt.Printf("Picked [(%d, MemID %d) %s,%s] [(%d, MemID %d) %s,%s]\n", 	a, fileloc_arr[a].MemID,
