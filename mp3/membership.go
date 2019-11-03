@@ -181,6 +181,11 @@ func checkSuspicion(vid int) {
 	for i, suspect := range(suspects) {
 		if suspect == vid {
 			suspect_idx = i
+
+			//OUR CODE
+			var ip_addr = memberMap[suspect].ip
+			//OUR CODE END
+
 			memberMap[suspect].alive = false
 			_, ok := children[vid]
 			if ok {
@@ -192,6 +197,10 @@ func checkSuspicion(vid int) {
 			eventTimeMap[vid] = crash_time
 			disseminate(message)
 			updateMonitors()
+
+			//PUT OUR REPLICATE HERE
+			handle_fail(ip_addr)
+
 			break
 		}
 	}
@@ -777,6 +786,11 @@ func listenOtherPort() (err error) {
 
 				_, ok := memberMap[subject]
 				if ok {
+
+					//OUR CODE
+					var ip_addr = memberMap[subject].ip
+					//OUR CODE END
+
 					memberMap[subject].alive = false
 					
 					_, ok = children[subject]
@@ -796,6 +810,9 @@ func listenOtherPort() (err error) {
 
 					updateMonitors()
 
+					//PUT OUR REPLICATE HERE
+					handle_fail(ip_addr)
+					
 					log.Printf("[ME %d] Processed %s for %d, maxID = %d", myVid, message_type, subject, maxID)
 				}
 			}			
@@ -1154,7 +1171,6 @@ func pick3(fileloc_arr [4]FileLoc) ([]int, []string){
 func pick2(fileloc_arr [4]FileLoc) ([]int, []string){
 	var ret_str []string = make([]string, 2)
 	var ret_int []int = make([]int, 2)
-	//Pick one to not
 	s := rand.NewSource(time.Now().Unix())
 	r := rand.New(s) // initialize local pseudorandom generator
 
@@ -1411,3 +1427,109 @@ func host_sdfs(){
 func is_zookeeper() bool{
 	return myIP == zoo_ip
 }
+
+
+
+
+//~~~~~~~~~~~~~~~~~~~~~~~~~~~~NODE FAILURE HANDLING~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+func handle_fail(ip_addr string){
+	fmt.Printf("Detected %s failed, re-replicating...\n")
+	file_vec := find_assoc_files(ip_addr)
+	for _,file := range file_vec{
+		fmt.Printf("Replicating file %s\n", file)
+		rel_ip := find_reliable_replica(file, ip_addr)
+		new_mem_id, new_ip := find_new_replica(file, ip_addr)
+		fmt.Printf("Replicating from %s:%s to %s:%s...\n", rel_ip, node_portnum, new_ip, node_portnum)
+		rep_to(file, rel_ip, node_portnum, new_ip, node_portnum)
+		fmt.Printf("Replication done; updating table...")
+		var f [4]FileLoc
+		for j := 0; j < 4; j++ {
+			if (FileTable[file])[j].ip != ip_addr{
+				f[j] = FileLoc{(FileTable[file])[j].MemID, (FileTable[file])[j].ip, (FileTable[file])[j].Timestamp}
+			} else {
+				f[j] = FileLoc{new_mem_id, new_ip, int64(time.Now().Unix())}
+			}
+		}
+		FileTable[file] = f
+		fmt.Println("New FileTable entry: ", FileTable[file])	
+		fmt.Printf("Done with Replicating %s, moving on...\n", file)
+	}
+	fmt.Printf("Done with recovery from death of %s!\n", ip_addr)
+}
+
+
+// type FileLoc struct{
+// 	MemID 	  int
+// 	ip 		  string
+// 	Timestamp int64
+// }
+
+// var FileTable = make(map[string]([4]FileLoc))
+
+func find_assoc_files(ip_addr string) []string{
+	fmt.Printf("Finding associated files for %s\n", ip_addr)
+	var fvec []string
+	for k, v := range FileTable{
+		fmt.Printf("Checking file %s\n", k)
+		fmt.Println("The list is ", v)
+		for _, copy := range v{
+			if copy.ip == ip_addr{
+				fmt.Printf("Found a match for %s! Adding to vector...\n", k)
+				fvec = append(fvec, k)
+				fmt.Println("Current file_vec: ", fvec)
+			}
+		}
+	}
+	fmt.Println("Done! fvec finalized as ", fvec)
+	return fvec
+}
+
+func find_reliable_replica(file, dead_ip string) string{
+	fmt.Printf("Finding a reliable file copy for %s...\n", file)
+	var max_ts int64 = 0
+	var max_idx int = 5
+	for idx, copy := range FileTable[file]{
+		if copy.ip != dead_ip && memberMap[copy.MemID].alive && copy.Timestamp > max_ts{
+			fmt.Printf("So far found %s at %d as the most recent replica, with timestamp %d\n", copy.ip, idx, copy.Timestamp)
+			max_ts = copy.Timestamp
+			max_idx = idx
+		}
+	}
+
+	if max_idx == 5{
+		fmt.Printf("We somehow messed up; no replicas found\n")
+	}
+
+	fmt.Printf("Final replica of file %s: %s at %d as the most recent replica, with timestamp %d\n", file, (FileTable[file])[max_idx].ip, max_idx, max_ts)
+	return (FileTable[file])[max_idx].ip 
+}
+
+
+// type MemberNode struct {
+// 	ip string
+// 	timestamp int64
+// 	alive bool
+// }
+// var memberMap = make(map[int]*MemberNode)
+
+func find_new_replica(file, dead_ip string) (int, string){
+	fmt.Printf("Finding a new node for %s...\n", file)
+	s := rand.NewSource(time.Now().Unix())
+	r := rand.New(s) // initialize local pseudorandom generator
+	a := r.Intn(len(memberMap)-1)+1
+	ip := memberMap[a].ip
+	fmt.Printf("Picked %s at %d\n", ip, a)
+	for ip == dead_ip || ip == (FileTable[file])[0].ip || ip == (FileTable[file])[1].ip || ip == (FileTable[file])[2].ip || ip == (FileTable[file])[3].ip || !memberMap[a].alive{
+
+		fmt.Printf("Rerolling...\n")
+		a = r.Intn(len(memberMap)-1)+1
+		ip = memberMap[a].ip
+		fmt.Printf("Picked %s at %d\n", ip, a)
+	}
+	return a, ip 
+}
+
+
+//WHEN DOING ZOOKEEPER HOT SWAP
+	//Change randomizers
+	//Change zoo_ip
