@@ -48,6 +48,29 @@ func (t *Sdfsrpc) Write_file(args Write_args, reply *int) error {
 }
 
 
+func (t *Sdfsrpc) Append_file(args Write_args, reply *int) error {
+	// Make the file in case it does not exist yet
+	fmt.Printf("---------------------------Writing %s to SDFS...------------------------\n", args.Sdfsname)
+
+	//File I/O way to do it
+	file, err := os.OpenFile(args.Sdfsname, os.O_APPEND|os.O_WRONLY, 0644)
+	if err != nil{
+		fmt.Printf("File creation error: %s\n", args.Sdfsname)
+		return err
+	}
+	defer file.Close()
+    bytesWritten, err := file.WriteString(args.Data)
+	if(err != nil){
+		fmt.Printf("File write error: %s\n", args.Sdfsname)
+		return err
+	}
+
+	Filemap[args.Sdfsname] = args.Timestamp
+	*reply = bytesWritten
+	return nil
+}
+
+
 ////////////////////////////////////////////////////////////////////////////
 type Read_args struct {
 	Sdfsname string
@@ -132,6 +155,7 @@ func (t *Sdfsrpc) Delete_file(args Read_args, reply *int64) error{
 //////////////////////////////////////////////////////////////////////
 
 func (t *Sdfsrpc) Get_store(args int, reply *string) error {
+	fmt.Printf("~~~~~~~~~~~~~~~~~~~~~~~~Get_store~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~\n")
 	for k, _ := range Filemap{
 		(*reply) += k + "\n"
 	}
@@ -147,7 +171,7 @@ type Rep_args struct{
 func (t *Sdfsrpc) Replicate_to(args Rep_args, reply *int) error {
 		fmt.Printf("---------------------------Replicate_to %s, %s, %s---------------------------\n", args.Sdfsname, args.Ip, args.Port)
 	if _, ok := Filemap[args.Sdfsname]; !ok {
-		fmt.Printf("We don't have file\n")
+		fmt.Printf("We don't have file %s\n", args.Sdfsname)
 		(*reply) = 0
 		return nil
 	}else{

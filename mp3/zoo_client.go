@@ -106,18 +106,54 @@ func c_put(localname, sdfsname string){
 		return
 	}
 	defer file.Close()
-    Data_r, err := ioutil.ReadAll(file)
 
-	fmt.Printf("Contacting zookeeper with %s to get IPs...\n", sdfsname)
-    ips, timestamp := put_req(sdfsname, getmyIP(), zoo_ip, zoo_portnum)
-    
-	fmt.Printf("Got IPs! Copying file to IPs...\n")
-    //Write the file to the four nodes
-    for _,node_ip := range ips{
-    	fmt.Printf("Broadcasting to %s...\n", node_ip)
-    	write(sdfsname, timestamp, string(Data_r), node_ip, node_portnum)
-    }
-    fmt.Printf("Done dispatching PUT broadcasts.\n")
+	fi, err := file.Stat()
+	if err != nil {
+  		fmt.Printf("Error with file stats\n")// Could not obtain stat, handle error
+	}
+
+	if fi.Size() < 5605500{
+		fmt.Printf("Sending file over in one go\n")
+    	Data_r, _ := ioutil.ReadAll(file)
+	
+		fmt.Printf("Contacting zookeeper with %s to get IPs...\n", sdfsname)
+    	ips, timestamp := put_req(sdfsname, getmyIP(), zoo_ip, zoo_portnum)
+    	
+		fmt.Printf("Got IPs! Copying file to IPs...\n")
+    	//Write the file to the four nodes
+    	for _,node_ip := range ips{
+    		fmt.Printf("Broadcasting to %s...\n", node_ip)
+    		write(sdfsname, timestamp, string(Data_r), node_ip, node_portnum)
+    	}
+    	fmt.Printf("Done dispatching PUT broadcasts.\n")
+	}else{
+		fmt.Printf("Too huge! Sending file over in chunks\n")
+    	var firstwrite = true
+    	n := 1
+    	buf := make([]byte, 15000)
+    	for n != 0 {
+    		reader := bufio.NewReader(file)
+    		// _, err := ioutil.ReadAll(file)
+    		n, _ = reader.Read(buf) 
+			fmt.Printf("Contacting zookeeper with %s to get IPs...\n", sdfsname)
+    		ips, timestamp := put_req(sdfsname, getmyIP(), zoo_ip, zoo_portnum)
+    		
+			fmt.Printf("Got IPs! Copying file to IPs...\n")
+    		//Write the file to the four nodes
+    		for _,node_ip := range ips{
+    			fmt.Printf("Broadcasting a chunk to %s...\n", node_ip)
+    			if firstwrite{
+    				write(sdfsname, timestamp, string(buf), node_ip, node_portnum)
+    				firstwrite = false
+    			}else{
+    				append(sdfsname, timestamp, string(buf), node_ip, node_portnum)
+    			}
+    		}
+    	}
+
+    	fmt.Printf("Done dispatching PUT broadcasts.\n")
+
+	}
 }
 
 func c_get(sdfsname, localname string){
@@ -303,6 +339,19 @@ func write(filename string, ts int64, data, ip, port string) int{
 	var args = sdfsrpc.Write_args{Sdfsname: filename, Data: data, Timestamp: ts} //Create the args gob to send over to the RPC
 	var reply int //Create a container for our results
 	_ = client.Call("Sdfsrpc.Write_file", args, &reply) //Make the remote call
+	return reply
+}
+
+
+func append(filename string, ts int64, data, ip, port string) int{
+	client, err := rpc.DialHTTP("tcp", ip + ":" + port) //Connect to given address
+	if err != nil {
+		log.Fatal(err)
+	}
+	// Synchronous call***************************************
+	var args = sdfsrpc.Write_args{Sdfsname: filename, Data: data, Timestamp: ts} //Create the args gob to send over to the RPC
+	var reply int //Create a container for our results
+	_ = client.Call("Sdfsrpc.Append_file", args, &reply) //Make the remote call
 	return reply
 }
 
