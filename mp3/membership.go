@@ -1476,6 +1476,7 @@ func find_assoc_files(ip_addr string) []string{
 		fmt.Printf("Checking file %s\n", k)
 		fmt.Println("The list is ", v)
 		for _, copy := range v{
+			fmt.Printf("Checking file %s ip address %s against our dead address %s\n", k, copy.ip, ip_addr)
 			if copy.ip == ip_addr{
 				fmt.Printf("Found a match for %s! Adding to vector...\n", k)
 				fvec = append(fvec, k)
