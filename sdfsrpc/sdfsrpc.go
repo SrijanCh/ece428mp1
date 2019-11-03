@@ -132,6 +132,7 @@ func (t *Sdfsrpc) Delete_file(args Read_args, reply *int64) error{
 //////////////////////////////////////////////////////////////////////
 
 func (t *Sdfsrpc) Get_store(args int, reply *string) error {
+	fmt.Printf("~~~~~~~~~~~~~~~~~~~~~~~~Get_store~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~\n")
 	for k, _ := range Filemap{
 		(*reply) += k + "\n"
 	}

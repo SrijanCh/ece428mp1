@@ -1356,11 +1356,16 @@ func store(ip, port string) string {
 	fmt.Printf("Get_store, ip: %s, port %s...\n", ip, port)
     client, err := rpc.DialHTTP("tcp", ip + ":" + port)
     if err != nil {
+    	fmt.Printf("Error setting up RPC dial...\n")
         return ""
     }
-    var args = sdfsrpc.Read_args{Sdfsname: ip}
+    var args = 0//sdfsrpc.Read_args{Sdfsname: ip}
     var reply string
-    _ = client.Call("Sdfsrpc.Get_store", args, &reply)
+    err = client.Call("Sdfsrpc.Get_store", args, &reply)
+    if err != nil {
+    	fmt.Printf("Error with RPC call...\n")
+        return ""
+    }
 	fmt.Printf("Got reply %s...\n", reply)
     return reply
 }
