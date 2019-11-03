@@ -1174,10 +1174,11 @@ func pick2(fileloc_arr [4]FileLoc) ([]int, []string){
 	ret_str[1] = fileloc_arr[b].ip
 
 	
-	fmt.Printf("Picked [(%d, MemID %d) %s,%s] [(%d, MemID %d) %s,%s]\n", 	a, fileloc_arr[a].MemID,
+	fmt.Printf("Picked [(%d, MemID %d) %s,%s] [(%d, MemID %d) %s,%s TIMESTAMPS %d, %d]\n", 	a, fileloc_arr[a].MemID,
 																		    fileloc_arr[a].ip, ret_str[0],
 																		    b, fileloc_arr[b].MemID,
-																		    fileloc_arr[b].ip, ret_str[1])
+																		    fileloc_arr[b].ip, ret_str[1],
+																			fileloc_arr[a].Timestamp, fileloc_arr[b].Timestamp)
 	return ret_int, ret_str
 }
 
@@ -1254,12 +1255,15 @@ func (t *Zookeeper) Zoo_get(args Get_args, reply *Get_return) error {
 		c0 := ((FileTable[args.Sdfsname])[a[0]]).Timestamp//get_timestamp(args.Sdfsname, b[0], node_portnum)
 		c1 := ((FileTable[args.Sdfsname])[a[1]]).Timestamp//get_timestamp(args.Sdfsname, b[1], node_portnum)
 		if(c0 == c1){ 		//both are on same consistency
+			fmt.Printf("Equal timestamps!\n")
 			(*reply).Ip = b[0]
 		} else {				//One needs an update
 			if c0 > c1 {
+				fmt.Printf("c0 is more recent\n")
 				(*reply).Ip = b[0]
 				rep_to(args.Sdfsname, b[1], node_portnum, b[0], node_portnum)
 			}else{
+				fmt.Printf("c1 is more recent\n")
 				(*reply).Ip = b[1]
 				rep_to(args.Sdfsname, b[0], node_portnum, b[1], node_portnum)
 			}
