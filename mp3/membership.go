@@ -1443,7 +1443,7 @@ func handle_fail(ip_addr string){
 		rel_ip := find_reliable_replica(file, ip_addr)
 		new_mem_id, new_ip := find_new_replica(file, ip_addr)
 		fmt.Printf("Replicating from %s:%s to %s:%s...\n", rel_ip, node_portnum, new_ip, node_portnum)
-		rep_to(file, rel_ip, node_portnum, new_ip, node_portnum)
+		rep_to(file, new_ip, node_portnum, rel_ip, node_portnum)
 		fmt.Printf("Replication done; updating table...")
 		var f [4]FileLoc
 		for j := 0; j < 4; j++ {
