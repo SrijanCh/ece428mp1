@@ -147,7 +147,7 @@ type Rep_args struct{
 func (t *Sdfsrpc) Replicate_to(args Rep_args, reply *int) error {
 		fmt.Printf("---------------------------Replicate_to %s, %s, %s---------------------------\n", args.Sdfsname, args.Ip, args.Port)
 	if _, ok := Filemap[args.Sdfsname]; !ok {
-		fmt.Printf("We don't have file\n")
+		fmt.Printf("We don't have file %s\n", args.Sdfsname)
 		(*reply) = 0
 		return nil
 	}else{
