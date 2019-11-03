@@ -8,6 +8,8 @@ import(
 	"fmt"
 	// "time"
 	"os"
+    "strings"
+    "bufio"
 	// "zookeeper"
     "io/ioutil"
 	// "log"	
@@ -17,7 +19,49 @@ var zoo_ip string = "172.22.154.255"
 const zoo_portnum = "3075"
 const node_portnum = "3074"
 
+func parse_command(command string) {
+    split_command := strings.Split(command, " ")
+    // Trim the newline because go...
+    for i := 0; i < len(split_command); i++ {
+        split_command[i] = strings.TrimSpace(split_command[i])
+    }
+    if "put" == split_command[0] {
+        if len(split_command) != 3 {
+            fmt.Printf("Invalid number of args for put\n")
+        } else {
+            c_put(split_command[1], split_command[2])
+        }
+    } else if "get" == split_command[0] {
+        if len(split_command) != 3 {
+            fmt.Printf("Invalid number of args for get\n")
+        } else {
+            c_get(split_command[1], split_command[2])
+        }
+    } else if "delete" == split_command[0] {
+
+        if len(split_command) != 2 {
+            fmt.Printf("Invalid number of args for delete\n")
+        } else {
+            c_delete(split_command[1])
+        }
+    } else if "ls" == split_command[0] {
+
+        if len(split_command) != 2 {
+            fmt.Printf("Invalid number of args for ls\n");
+        } else {
+            c_ls(split_command[1])
+        }
+    } else {
+        fmt.Printf("Invalid command\n")
+    }
+}
+
 func main(){
+    reader := bufio.NewReader(os.Stdin)
+    for {
+        text, _ := reader.ReadString('\n')
+        parse_command(text)
+    }
 	// write("testfile", "abcdefg", "172.22.154.255", "3074")
 	// var a sdfsrpc.Read_reply = read("testfile", "172.22.154.255", "3074")
 	// fmt.Printf("Read %s with Timestamp %d\n", a.Data, a.Timestamp)
