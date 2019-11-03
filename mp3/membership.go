@@ -1327,7 +1327,7 @@ type Store_args struct {
     Node_ip string
 }
 
-func (t *Zookeeper) Zoo_store(args Store_args, reply *string) error {
+func (t* Zookeeper) Zoo_store(args Store_args, reply *string) error {
     *reply = store(args.Node_ip, node_portnum)
     return nil
 }
