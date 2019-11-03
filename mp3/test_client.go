@@ -52,7 +52,10 @@ func write(filename, data, ip, port string) int{
 	// Synchronous call***************************************
 	var args = sdfsrpc.Write_args{Sdfsname: filename, Data: data, Timestamp: int64(time.Now().Nanosecond())} //Create the args gob to send over to the RPC
 	var reply int //Create a container for our results
-	_ = client.Call("Sdfsrpc.Write_file", args, &reply) //Make the remote call
+	err = client.Call("Sdfsrpc.Write_file", args, &reply) //Make the remote call
+	if err != nil {
+		log.Fatal(err)
+	}
 	return reply
 }
 
@@ -64,7 +67,10 @@ func read(filename, ip, port string) sdfsrpc.Read_reply{
 	}
 	var args = sdfsrpc.Read_args{Sdfsname: filename} //Create the args gob to send over to the RPC
 	var reply sdfsrpc.Read_reply //Create a container for our results
-	_ = client.Call("Sdfsrpc.Get_file", args, &reply) //Make the remote call
+	err = client.Call("Sdfsrpc.Get_file", args, &reply) //Make the remote call
+	if err != nil {
+		log.Fatal(err)
+	}
 	return reply
 }
 
@@ -76,7 +82,10 @@ func delete(filename, ip, port string) int64{
 
 	var args = sdfsrpc.Read_args{Sdfsname: filename} //Create the args gob to send over to the RPC
 	var reply int64 //Create a container for our results
-	_ = client.Call("Sdfsrpc.Delete_file", args, &reply) //Make the remote call
+	err = client.Call("Sdfsrpc.Delete_file", args, &reply) //Make the remote call
+	if err != nil {
+		log.Fatal(err)
+	}
 	return reply
 }
 
@@ -87,7 +96,10 @@ func get_timestamp(filename, ip, port string) int64{
 	}
 	var args = sdfsrpc.Read_args{Sdfsname: filename} //Create the args gob to send over to the RPC
 	var reply int64 //Create a container for our results
-	_ = client.Call("Sdfsrpc.Get_timestamp", args, &reply) //Make the remote call	
+	err = client.Call("Sdfsrpc.Get_timestamp", args, &reply) //Make the remote call	
+	if err != nil {
+		log.Fatal(err)
+	}
 	return reply
 }
 
@@ -98,7 +110,10 @@ func get_store(ip, port string) string{
 	}
 	var args int
 	var store_list string
-	_ = client.Call("Sdfsrpc.Get_store", args, &store_list) //Make the remote call	
+	err = client.Call("Sdfsrpc.Get_store", args, &store_list) //Make the remote call	
+	if err != nil {
+		log.Fatal(err)
+	}
 	return store_list
 }
 

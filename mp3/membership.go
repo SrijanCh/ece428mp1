@@ -940,11 +940,13 @@ func main() {
 
 	//OUR STUFF
 		if myIP == zoo_ip {
+			log.Printf("Starting Zookeeper\n")
 			//DEPLOY ZOOKEEPER
 			go host_zookeeper()
 			//ZOOKEEPER END
 		} else {
 			//DEPLOY SDFS
+			log.Printf("Starting SDFS\n")
 			go host_sdfs()
 			//SDFS END
 		}

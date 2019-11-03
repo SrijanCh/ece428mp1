@@ -49,7 +49,7 @@ func c_put(localname, sdfsname string){
     //Write the file to the four nodes
     for _,node_ip := range ips{
     	fmt.Printf("Broadcasting to %s...\n", node_ip)
-    	go write(sdfsname, timestamp, string(Data_r), node_ip, node_portnum)
+    	write(sdfsname, timestamp, string(Data_r), node_ip, node_portnum)
     }
     fmt.Printf("Done dispatching PUT broadcasts.\n")
 }
@@ -94,6 +94,7 @@ func c_ls(sdfsname string){
 
 
 func put_req(sdfsname, my_ip, ip, port string) ([]string, int64){
+	fmt.Printf("------------Put req----------------")
 	client, err := rpc.DialHTTP("tcp", ip + ":" + port) //Connect to given address
 	if err != nil {
 		log.Fatal(err)
@@ -101,7 +102,12 @@ func put_req(sdfsname, my_ip, ip, port string) ([]string, int64){
 	// Synchronous call***************************************
 	var args = zookeeper.Put_args{Sdfsname: sdfsname, Call_ip: my_ip} //Create the args gob to send over to the RPC
 	var reply zookeeper.Put_return //Create a container for our results
-	_ = client.Call("Zookeeper.Zoo_put", args, &reply) //Make the remote call
+	fmt.Printf("Put_req args: %s, %s", sdfsname, my_ip)
+	err = client.Call("Zookeeper.Zoo_put", args, &reply) //Make the remote call
+	if err != nil{
+		log.Fatal(err)
+	}
+	fmt.Printf("Put_req reply: ", reply.Ips)
 	return reply.Ips, reply.Timestamp
 }
 
@@ -114,7 +120,10 @@ func get_req(sdfsname, ip, port string) (string){
 	// Synchronous call***************************************
 	var args = zookeeper.Get_args{Sdfsname: sdfsname} //Create the args gob to send over to the RPC
 	var reply zookeeper.Get_return //Create a container for our results
-	_ = client.Call("Zookeeper.Zoo_get", args, &reply) //Make the remote call
+	err = client.Call("Zookeeper.Zoo_get", args, &reply) //Make the remote call
+	if err != nil{
+		log.Fatal(err)
+	}
 	return reply.Ip
 }
 
@@ -126,7 +135,10 @@ func del_req(sdfsname, ip, port string) int64{
 	// Synchronous call***************************************
 	var args = zookeeper.Del_args{Sdfsname: sdfsname} //Create the args gob to send over to the RPC
 	var reply int64 //Create a container for our results
-	_ = client.Call("Zookeeper.Zoo_del", args, &reply) //Make the remote call
+	err = client.Call("Zookeeper.Zoo_del", args, &reply) //Make the remote call
+	if err != nil{
+		log.Fatal(err)
+	}
 	return reply
 }
 
@@ -138,7 +150,10 @@ func ls_req(sdfsname, ip, port string) string{
 	// Synchronous call***************************************
 	var args = zookeeper.Del_args{Sdfsname: sdfsname} //Create the args gob to send over to the RPC
 	var reply string //Create a container for our results
-	_ = client.Call("Zookeeper.Zoo_ls", args, &reply) //Make the remote call
+	err = client.Call("Zookeeper.Zoo_ls", args, &reply) //Make the remote call
+	if err != nil{
+		log.Fatal(err)
+	}
 	return reply
 }
 
@@ -162,7 +177,10 @@ func read(filename, ip, port string) sdfsrpc.Read_reply{
 	}
 	var args = sdfsrpc.Read_args{Sdfsname: filename} //Create the args gob to send over to the RPC
 	var reply sdfsrpc.Read_reply //Create a container for our results
-	_ = client.Call("Sdfsrpc.Get_file", args, &reply) //Make the remote call
+	err = client.Call("Sdfsrpc.Get_file", args, &reply) //Make the remote call
+	if err != nil{
+		log.Fatal(err)
+	}
 	return reply
 }
 
@@ -185,7 +203,10 @@ func get_timestamp(filename, ip, port string) int64{
 	}
 	var args = sdfsrpc.Read_args{Sdfsname: filename} //Create the args gob to send over to the RPC
 	var reply int64 //Create a container for our results
-	_ = client.Call("Sdfsrpc.Get_timestamp", args, &reply) //Make the remote call	
+	err = client.Call("Sdfsrpc.Get_timestamp", args, &reply) //Make the remote call	
+	if err != nil{
+		log.Fatal(err)
+	}
 	return reply
 }
 
@@ -196,7 +217,10 @@ func get_store(ip, port string) string{
 	}
 	var args int
 	var store_list string
-	_ = client.Call("Sdfsrpc.Get_store", args, &store_list) //Make the remote call	
+	err = client.Call("Sdfsrpc.Get_store", args, &store_list) //Make the remote call	
+	if err != nil{
+		log.Fatal(err)
+	}
 	return store_list
 }
 
@@ -207,7 +231,10 @@ func rep_to(filename, ipto, portto, ip, port string) int{
 	}
 	var args = sdfsrpc.Rep_args{filename, ipto, portto}
 	var retval int
-	_ = client.Call("Sdfsrpc.Replicate_to", args, &retval) //Make the remote call	
+	err = client.Call("Sdfsrpc.Replicate_to", args, &retval) //Make the remote call	
+	if err != nil{
+		log.Fatal(err)
+	}
 	return retval
 }
 

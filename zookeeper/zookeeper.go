@@ -5,7 +5,6 @@ import(
   	"math/rand"
   	"time"
   	"fmt"
-	// "log"
 	"net/rpc"
 )
 
@@ -79,8 +78,8 @@ func printMemberMap() {
 }
 
 func pick4() ([]int, []string){
-	var ret_str []string = make([]string, 4)
-	var ret_int []int = make([]int, 4)
+	var ret_str []string = make([]string, 0)
+	var ret_int []int = make([]int, 0)
 	var a,b,c,d int
 
 	if (num_live() < 4){
@@ -102,27 +101,27 @@ func pick4() ([]int, []string){
 
 	a = r.Intn(len(MemberMap))
 	MemNode, ok := MemberMap[a]
-	for !ok || !MemNode.Alive{
+	for !ok || !(*MemNode).Alive{
 		a = r.Intn(len(MemberMap))
 	}
-	ret_str = append(ret_str, MemNode.Ip)
+	ret_str = append(ret_str, (*MemNode).Ip)
 	ret_int = append(ret_int, a)
 	
 	b = r.Intn(len(MemberMap))
 	MemNode, ok = MemberMap[b]
-	for !ok || !MemNode.Alive || b == a{
+	for !ok || !(*MemNode).Alive || b == a{
 		b = r.Intn(len(MemberMap))
 	}
-	ret_str = append(ret_str, MemNode.Ip)
+	ret_str = append(ret_str, (*MemNode).Ip)
 	ret_int = append(ret_int, b)
 
 
 	c = r.Intn(len(MemberMap))
 	MemNode, ok = MemberMap[c]
-	for !ok || !MemNode.Alive || c == a || c == b{
+	for !ok || !(*MemNode).Alive || c == a || c == b{
 		c = r.Intn(len(MemberMap))
 	}
-	ret_str = append(ret_str, MemNode.Ip)
+	ret_str = append(ret_str, (*MemNode).Ip)
 	ret_int = append(ret_int, c)
 
 
@@ -131,7 +130,7 @@ func pick4() ([]int, []string){
 	for !ok || !MemNode.Alive || d == a || d == b || d == c{
 		d = r.Intn(len(MemberMap))
 	}
-	ret_str = append(ret_str, MemNode.Ip)
+	ret_str = append(ret_str, (*MemNode).Ip)
 	ret_int = append(ret_int, d)
 
 	fmt.Printf("Picked [(%d,%d) %s,%s] [(%d,%d) %s,%s] [(%d,%d) %s,%s] and [(%d,%d) %s,%s]\n", a, ret_int[0], 
