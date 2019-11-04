@@ -1359,7 +1359,7 @@ func (t* Zookeeper) Zoo_store(args Store_args, reply *string) error {
     return nil
 }
 
-
+//FOR LEADER TABLE UPDATES
 type Table_args struct{
 	table map[string]([4]FileLoc)
 }
@@ -1393,9 +1393,12 @@ func update_table(my_table map[string]([4]FileLoc), ip, port string) string{
 func update_tables(my_table map[string]([4]FileLoc)){
 	fmt.Printf("Updating all tables...\n")
 	for i := 0; i < 4; i++{
+		fmt.Printf("Updating table at %s...\n", zoo_list[i])
 		update_table(FileTable, zoo_list[i], zoo_portnum)
 	}
 }
+//LEADER TABLE UPDATES ENF
+
 
 // Gather all the files stored at the specified ip address
 func store(ip, port string) string {
