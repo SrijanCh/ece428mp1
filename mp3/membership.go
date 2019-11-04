@@ -1060,6 +1060,7 @@ func num_live() int{
 	return count
 }
 
+//Prints the member map in detail
 func printmemberMap() {
 	fmt.Printf("Zookeeper member list: [\n")
 	for id, ele := range(memberMap) {
@@ -1068,6 +1069,7 @@ func printmemberMap() {
 	fmt.Printf("]\n")
 }
 
+//Picks 4 random alive nodes
 func pick4() ([]int, []string){
 	var ret_str []string = make([]string, 4)
 	var ret_int []int = make([]int, 4)
@@ -1135,6 +1137,7 @@ func pick4() ([]int, []string){
 	return ret_int, ret_str
 }
 
+//Picks 3 random nodes from a file allocation list
 func pick3(fileloc_arr [4]FileLoc) ([]int, []string){
 	var ret_str []string = make([]string, 3)
 	var ret_int []int = make([]int, 3)
@@ -1176,6 +1179,7 @@ func pick3(fileloc_arr [4]FileLoc) ([]int, []string){
 	return ret_int, ret_str
 }
 
+//Picks 2 random nodes from a file allocation list
 func pick2(fileloc_arr [4]FileLoc) ([]int, []string){
 	var ret_str []string = make([]string, 2)
 	var ret_int []int = make([]int, 2)
@@ -1313,7 +1317,7 @@ type Del_args struct{
 	Sdfsname string
 }
 
-// 3) delete sdfsfilename
+// 3) delete sdfsfilename: deletes from sdfs
 func (t *Zookeeper) Zoo_del(args Del_args, reply *int64) error {
 	if _, ok := FileTable[args.Sdfsname]; !ok { //Invalid file
 		fmt.Printf("DEL: No such file found, so success I guess?\n")
@@ -1365,6 +1369,7 @@ type Table_args struct{
 	Table map[string]([4]FileLoc)
 }
 
+//Updates my zookeper table
 func (t* Zookeeper) Zoo_update_table(args Table_args, reply *string) error {
     fmt.Println("UPdate request to ", args.Table)
     fmt.Println("My old FileTable: ", FileTable)
@@ -1374,6 +1379,7 @@ func (t* Zookeeper) Zoo_update_table(args Table_args, reply *string) error {
     return nil
 }
 
+//RPC wrapper
 func update_table(my_table map[string]([4]FileLoc), ip, port string) string{
 	fmt.Printf("update_table, ip: %s, port %s...\n", ip, port)
     client, err := rpc.DialHTTP("tcp", ip + ":" + port)
@@ -1392,7 +1398,7 @@ func update_table(my_table map[string]([4]FileLoc), ip, port string) string{
     return reply
 }
 
-
+//Update all other zookeeper tables
 func update_tables(my_table map[string]([4]FileLoc)){
 	fmt.Printf("Updating all tables...\n")
 	for i := 0; i < 4; i++{
@@ -1430,6 +1436,7 @@ type Put_confirm_args struct {
     Sdfsname string
 }
 
+//Allows confirmation on a repeated put
 func (t* Zookeeper) Zoo_put_confirm(args Put_confirm_args, reply *bool) error {
     *reply = put_confirm(args.Sdfsname)
     return nil
@@ -1443,6 +1450,7 @@ func maxtime (a int64, b int64) int64 {
     }
 }
 
+//Same but actual block
 func put_confirm (sdfsname string) bool {
 	fmt.Printf("Confirm %s\n", sdfsname)
 	fmt.Println("Table: ", FileTable)
@@ -1465,6 +1473,7 @@ func put_confirm (sdfsname string) bool {
 	}
 }
 
+//Delete RPC wrapper
 func del(filename, ip, port string) int64{
 	client, err := rpc.DialHTTP("tcp", ip + ":" + port) //Connect to given address
 	if err != nil {
@@ -1477,6 +1486,7 @@ func del(filename, ip, port string) int64{
 	return reply
 }
 
+//Gets the tiestamp on a file in a remote server
 func get_timestamp(filename, ip, port string) int64{
 	client, err := rpc.DialHTTP("tcp", ip + ":" + port) //Connect to given address
 	if err != nil {
@@ -1488,6 +1498,7 @@ func get_timestamp(filename, ip, port string) int64{
 	return reply
 }
 
+//Replicates from an ip to an ip
 func rep_to(filename, ipto, portto, ip, port string) int{
 	client, err := rpc.DialHTTP("tcp", ip + ":" + port) //Connect to given address
 	if err != nil {
@@ -1499,6 +1510,7 @@ func rep_to(filename, ipto, portto, ip, port string) int{
 	return retval
 }
 
+//Starts a zookeeper server
 func host_zookeeper(){
 	zookeeper := new(Zookeeper) //Creates a new Zookeeper object to handle the RPCs for this server
 	rpc.Register(zookeeper) //Registers the Zookeeper as our handler
@@ -1513,6 +1525,7 @@ func host_zookeeper(){
 	http.Serve(l, nil) //Serve	
 }
 
+//Hosts an sdfs node
 func host_sdfs(){
 	sdfsrpc := new(sdfsrpc.Sdfsrpc) //Creates a new Querier object to handle the RPCs for this server
 	rpc.Register(sdfsrpc) //Registers the Querier as our handler
@@ -1527,6 +1540,7 @@ func host_sdfs(){
 	http.Serve(l, nil) //Serve
 }
 
+//Checks if a node is zookeeper
 func is_zookeeper() bool{
 	return myIP == zoo_list[0] || myIP == zoo_list[1] || myIP == zoo_list[2] || myIP == zoo_list[3]
 }
@@ -1537,6 +1551,7 @@ func is_real_zookeeper() bool{
 
 
 //~~~~~~~~~~~~~~~~~~~~~~~~~~~~NODE FAILURE HANDLING~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+//Rereplicates a node's files upon its failure
 func handle_fail(ip_addr string){
 	fmt.Printf("Detected %s failed, re-replicating...\n")
 	file_vec := find_assoc_files(ip_addr)
@@ -1571,6 +1586,7 @@ func handle_fail(ip_addr string){
 
 // var FileTable = make(map[string]([4]FileLoc))
 
+//Find files associated with an ip
 func find_assoc_files(ip_addr string) []string{
 	fmt.Printf("Finding associated files for %s\n", ip_addr)
 	var fvec []string
@@ -1590,6 +1606,7 @@ func find_assoc_files(ip_addr string) []string{
 	return fvec
 }
 
+//Find the latest replica of a file
 func find_reliable_replica(file, dead_ip string) string{
 	fmt.Printf("Finding a reliable file copy for %s...\n", file)
 	var max_ts int64 = 0
@@ -1618,6 +1635,7 @@ func find_reliable_replica(file, dead_ip string) string{
 // }
 // var memberMap = make(map[int]*MemberNode)
 
+//Finds a random place for the new replica
 func find_new_replica(file, dead_ip string) (int, string){
 	fmt.Printf("Finding a new node for %s...\n", file)
 	s := rand.NewSource(time.Now().Unix())

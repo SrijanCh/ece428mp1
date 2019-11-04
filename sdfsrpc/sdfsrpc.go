@@ -25,6 +25,7 @@ type Write_args struct {
 	Timestamp int64
 }
 
+//Writes to a file anew
 func (t *Sdfsrpc) Write_file(args Write_args, reply *int) error {
 	// Make the file in case it does not exist yet
 	fmt.Printf("---------------------------Writing %s to SDFS...------------------------\n", args.Sdfsname)
@@ -47,7 +48,7 @@ func (t *Sdfsrpc) Write_file(args Write_args, reply *int) error {
 	return nil
 }
 
-
+//Appends to the end of a file
 func (t *Sdfsrpc) Append_file(args Write_args, reply *int) error {
 	// Make the file in case it does not exist yet
 	fmt.Printf("---------------------------Writing %s to SDFS...------------------------\n", args.Sdfsname)
@@ -80,6 +81,7 @@ type Read_reply struct {
 	Timestamp int64
 }
 
+//Gets a file by sdfsname
 func (t *Sdfsrpc) Get_file(args Read_args, reply *Read_reply) error {
 	fmt.Printf("---------------------------Getting %s from SDFS...---------------------------\n", args.Sdfsname)
 
@@ -116,6 +118,7 @@ func (t *Sdfsrpc) Get_file(args Read_args, reply *Read_reply) error {
 
 /////////////////////////////////////////////////////////////////////
 
+//Gets the timestamp for a file
 func (t *Sdfsrpc) Get_timestamp(args Read_args, reply *int64) error {
 	fmt.Printf("Getting %s's Timestamp from SDFS...\n", args.Sdfsname)
 	
@@ -131,6 +134,7 @@ func (t *Sdfsrpc) Get_timestamp(args Read_args, reply *int64) error {
 
 /////////////////////////////////////////////////////////////////////
 
+//Deletes a file
 func (t *Sdfsrpc) Delete_file(args Read_args, reply *int64) error{
 	fmt.Printf("---------------------------Deleting %s from SDFS...---------------------------\n", args.Sdfsname)
 
@@ -154,6 +158,7 @@ func (t *Sdfsrpc) Delete_file(args Read_args, reply *int64) error{
 
 //////////////////////////////////////////////////////////////////////
 
+//Gets a list of stored files
 func (t *Sdfsrpc) Get_store(args int, reply *string) error {
 	fmt.Printf("~~~~~~~~~~~~~~~~~~~~~~~~Get_store~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~\n")
 	for k, _ := range Filemap{
@@ -168,6 +173,7 @@ type Rep_args struct{
 	Sdfsname, Ip, Port string
 }
 
+//Replicates from a file to another one
 func (t *Sdfsrpc) Replicate_to(args Rep_args, reply *int) error {
 		fmt.Printf("---------------------------Replicate_to %s, %s, %s---------------------------\n", args.Sdfsname, args.Ip, args.Port)
 	if _, ok := Filemap[args.Sdfsname]; !ok {

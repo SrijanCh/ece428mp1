@@ -15,6 +15,7 @@ import(
 	// "log"	
 )
 
+//Zookeeper to query
 var zoo_ip string = "172.22.154.255"
 // var zoo_ip string = "172.22.156.255"
 // var zoo_ip string = "172.22.153.4"
@@ -23,6 +24,7 @@ var zoo_ip string = "172.22.154.255"
 const zoo_portnum = "3075"
 const node_portnum = "3074"
 
+//Constantly parses commands like a cmdline
 func parse_command(command string) {
     split_command := strings.Split(command, " ")
     // Trim the newline because go...
@@ -99,7 +101,7 @@ func main(){
 	c_put("log.txt", "firstfile")
 }
 
-
+//Put cmd
 func c_put(localname, sdfsname string){
 	fmt.Printf("PUT %s %s\n", localname, sdfsname)
 
@@ -164,6 +166,7 @@ func c_put(localname, sdfsname string){
 	}
 }
 
+//Get cmd
 func c_get(sdfsname, localname string){
 	fmt.Printf("GET: %s, %s\n", sdfsname, localname)
     fmt.Printf("Obtaining best node to get the file from...")
@@ -192,16 +195,19 @@ func c_get(sdfsname, localname string){
 	fmt.Printf("Done! Read the file %s from SDFS into %s\n", sdfsname, localname)
 }
 
+//delete cmd
 func c_delete(sdfsname string){
 	fmt.Printf("Requesting delete of %s\n", sdfsname)
 	del_req(sdfsname, zoo_ip, zoo_portnum)
 }
 
+//ls cmd
 func c_ls(sdfsname string){
 	fmt.Printf("Checking where %s is located...\n", sdfsname)
 	fmt.Printf("%s\n", ls_req(sdfsname, zoo_ip, zoo_portnum))
 }
 
+//store cmd
 func c_store(ip string){
     fmt.Printf("Getting all file names at node ip %s\n", ip)
     fmt.Printf("%s\n", store_req(ip, zoo_ip, zoo_portnum))
@@ -216,6 +222,7 @@ type Put_return struct{
 	Timestamp int64
 }
 
+//put wrapper for RPC
 func put_req(sdfsname, my_ip, ip, port string) ([]string, int64){
 	fmt.Printf("------------Put req----------------")
 	client, err := rpc.DialHTTP("tcp", ip + ":" + port) //Connect to given address
@@ -248,6 +255,7 @@ type Get_return struct{
 	Ip string
 }
 
+//Wrapper for Get RPC
 func get_req(sdfsname, ip, port string) (string){
 	client, err := rpc.DialHTTP("tcp", ip + ":" + port) //Connect to given address
 	if err != nil {
@@ -267,6 +275,7 @@ type Del_args struct{
 	Sdfsname string
 }
 
+//Wrapper for del RPC
 func del_req(sdfsname, ip, port string) int64{
 	client, err := rpc.DialHTTP("tcp", ip + ":" + port) //Connect to given address
 	if err != nil {
@@ -286,6 +295,7 @@ type Ls_args struct{
 	Sdfsname string
 }
 
+//Wrapper for ls RPC
 func ls_req(sdfsname, ip, port string) string{
 	client, err := rpc.DialHTTP("tcp", ip + ":" + port) //Connect to given address
 	if err != nil {
@@ -305,6 +315,7 @@ type Store_args struct {
     Node_ip string
 }
 
+//Wrapper for store RPC
 func store_req(node_ip, ip, port string) string {
     client, err := rpc.DialHTTP("tcp", ip + ":" + port)
     if err != nil {
@@ -324,6 +335,7 @@ type Put_confirm_args struct {
     Sdfsname string
 }
 
+//wrapper for confirm RPC
 func put_confirm_req(Filename, zoo_ip, port string) bool {
     client, err := rpc.DialHTTP("tcp", zoo_ip + ":" + port)
     if err != nil {
@@ -338,6 +350,7 @@ func put_confirm_req(Filename, zoo_ip, port string) bool {
     return reply
 }
 
+//Wrapper for write
 func write(filename string, ts int64, data, ip, port string) int{
 	client, err := rpc.DialHTTP("tcp", ip + ":" + port) //Connect to given address
 	if err != nil {
@@ -350,7 +363,7 @@ func write(filename string, ts int64, data, ip, port string) int{
 	return reply
 }
 
-
+//Wrapper for append
 func append(filename string, ts int64, data, ip, port string) int{
 	client, err := rpc.DialHTTP("tcp", ip + ":" + port) //Connect to given address
 	defer client.Close()
@@ -364,6 +377,7 @@ func append(filename string, ts int64, data, ip, port string) int{
 	return reply
 }
 
+//Wrapper for read
 func read(filename, ip, port string) sdfsrpc.Read_reply{
 	client, err := rpc.DialHTTP("tcp", ip + ":" + port) //Connect to given address
 	if err != nil {
@@ -378,6 +392,7 @@ func read(filename, ip, port string) sdfsrpc.Read_reply{
 	return reply
 }
 
+//Wrapper for delete
 func delete(filename, ip, port string) int64{
 	client, err := rpc.DialHTTP("tcp", ip + ":" + port) //Connect to given address
 	if err != nil {
@@ -390,6 +405,7 @@ func delete(filename, ip, port string) int64{
 	return reply
 }
 
+//Wrapper for get timestamp
 func get_timestamp(filename, ip, port string) int64{
 	client, err := rpc.DialHTTP("tcp", ip + ":" + port) //Connect to given address
 	if err != nil {
@@ -404,6 +420,7 @@ func get_timestamp(filename, ip, port string) int64{
 	return reply
 }
 
+//Wrapper for store
 func get_store(ip, port string) string{
 	client, err := rpc.DialHTTP("tcp", ip + ":" + port) //Connect to given address
 	if err != nil {
@@ -418,6 +435,7 @@ func get_store(ip, port string) string{
 	return store_list
 }
 
+//Wrapper for replicating to
 func rep_to(filename, ipto, portto, ip, port string) int{
 	client, err := rpc.DialHTTP("tcp", ip + ":" + port) //Connect to given address
 	if err != nil {
@@ -432,6 +450,7 @@ func rep_to(filename, ipto, portto, ip, port string) int{
 	return retval
 }
 
+//Getting my own IP
 func getmyIP() (string) {
 	var myIp string
 	addrs, err := net.InterfaceAddrs()
