@@ -1015,7 +1015,7 @@ type Zookeeper int
 
 type FileLoc struct{
 	MemID 	  int
-	ip 		  string
+	Ip 		  string
 	Timestamp int64
 }
 
@@ -1147,7 +1147,7 @@ func pick3(fileloc_arr [4]FileLoc) ([]int, []string){
 		a = r.Intn(len(fileloc_arr))
 	}
 	ret_int[0] = a
-	ret_str[0] = fileloc_arr[a].ip
+	ret_str[0] = fileloc_arr[a].Ip
 
 
 	b := r.Intn(len(fileloc_arr))
@@ -1155,7 +1155,7 @@ func pick3(fileloc_arr [4]FileLoc) ([]int, []string){
 		b = r.Intn(len(fileloc_arr))
 	}
 	ret_int[1] = b
-	ret_str[1] = fileloc_arr[b].ip
+	ret_str[1] = fileloc_arr[b].Ip
 
 
 	c := r.Intn(len(fileloc_arr))
@@ -1163,16 +1163,16 @@ func pick3(fileloc_arr [4]FileLoc) ([]int, []string){
 		c = r.Intn(len(fileloc_arr))
 	}
 	ret_int[2] = c
-	ret_str[2] = fileloc_arr[c].ip
+	ret_str[2] = fileloc_arr[c].Ip
 
 
 	fmt.Printf("Picked [(%d, MemID %d) %s,%s] [(%d, MemID %d) %s,%s] [(%d, MemID %d) %s,%s]\n",  			
 																			a, fileloc_arr[a].MemID,
-																		    fileloc_arr[a].ip, ret_str[0],
+																		    fileloc_arr[a].Ip, ret_str[0],
 																		    b, fileloc_arr[b].MemID,
-																		    fileloc_arr[b].ip, ret_str[1],
+																		    fileloc_arr[b].Ip, ret_str[1],
 																			c, fileloc_arr[c].MemID,
-																			fileloc_arr[c].ip, ret_str[2])
+																			fileloc_arr[c].Ip, ret_str[2])
 	return ret_int, ret_str
 }
 
@@ -1187,7 +1187,7 @@ func pick2(fileloc_arr [4]FileLoc) ([]int, []string){
 		a = r.Intn(len(fileloc_arr))
 	}
 	ret_int[0] = a
-	ret_str[0] = fileloc_arr[a].ip
+	ret_str[0] = fileloc_arr[a].Ip
 
 
 	b := r.Intn(len(fileloc_arr))
@@ -1195,13 +1195,13 @@ func pick2(fileloc_arr [4]FileLoc) ([]int, []string){
 		b = r.Intn(len(fileloc_arr))
 	}
 	ret_int[1] = b
-	ret_str[1] = fileloc_arr[b].ip
+	ret_str[1] = fileloc_arr[b].Ip
 
 	
 	fmt.Printf("Picked [(%d, MemID %d) %s,%s] [(%d, MemID %d) %s,%s TIMESTAMPS %d, %d]\n", 	a, fileloc_arr[a].MemID,
-																		    fileloc_arr[a].ip, ret_str[0],
+																		    fileloc_arr[a].Ip, ret_str[0],
 																		    b, fileloc_arr[b].MemID,
-																		    fileloc_arr[b].ip, ret_str[1],
+																		    fileloc_arr[b].Ip, ret_str[1],
 																			fileloc_arr[a].Timestamp, fileloc_arr[b].Timestamp)
 	return ret_int, ret_str
 }
@@ -1249,10 +1249,10 @@ func (t *Zookeeper) Zoo_put(args Put_args, reply *Put_return) error {
 		fmt.Printf("PUT: THIS (REWRITE) TIMESTAMP IS %d\n", c)
 		var f [4]FileLoc
 		miss := 6 - a[0] - a[1] - a[2]
-		f[a[0]] = FileLoc{fileloc_arr[a[0]].MemID, fileloc_arr[a[0]].ip, c}
-		f[a[1]] = FileLoc{fileloc_arr[a[1]].MemID, fileloc_arr[a[1]].ip, c}
-		f[a[2]] = FileLoc{fileloc_arr[a[2]].MemID, fileloc_arr[a[2]].ip, c}
-		f[miss] = FileLoc{fileloc_arr[miss].MemID, fileloc_arr[miss].ip, fileloc_arr[miss].Timestamp}
+		f[a[0]] = FileLoc{fileloc_arr[a[0]].MemID, fileloc_arr[a[0]].Ip, c}
+		f[a[1]] = FileLoc{fileloc_arr[a[1]].MemID, fileloc_arr[a[1]].Ip, c}
+		f[a[2]] = FileLoc{fileloc_arr[a[2]].MemID, fileloc_arr[a[2]].Ip, c}
+		f[miss] = FileLoc{fileloc_arr[miss].MemID, fileloc_arr[miss].Ip, fileloc_arr[miss].Timestamp}
 		FileTable[args.Sdfsname] = f
 
 		fmt.Println("The new table: ", FileTable[args.Sdfsname])
@@ -1319,7 +1319,7 @@ func (t *Zookeeper) Zoo_del(args Del_args, reply *int64) error {
 		fmt.Printf("DEL: No such file found, so success I guess?\n")
 	}else{
 		for i := 0; i < 4; i++{
-			del(args.Sdfsname, (FileTable[args.Sdfsname])[i].ip, node_portnum)
+			del(args.Sdfsname, (FileTable[args.Sdfsname])[i].Ip, node_portnum)
 		}
 		delete(FileTable, args.Sdfsname)
 	}
@@ -1341,7 +1341,7 @@ func (t* Zookeeper) Zoo_ls(args Ls_args, reply *string) error{
 	if _, ok := FileTable[args.Sdfsname]; ok { //Invalid file
 		fmt.Printf("LS: Starting search...\n")
 		for i := 0; i < 4; i++{
-			str += "(" + string((FileTable[args.Sdfsname])[i].MemID) + ")" + string((FileTable[args.Sdfsname])[i].ip) + "\n"
+			str += "(" + string((FileTable[args.Sdfsname])[i].MemID) + ")" + string((FileTable[args.Sdfsname])[i].Ip) + "\n"
 		}
 	}
 	*reply = str
@@ -1549,8 +1549,8 @@ func handle_fail(ip_addr string){
 		fmt.Printf("Replication done; updating table...")
 		var f [4]FileLoc
 		for j := 0; j < 4; j++ {
-			if (FileTable[file])[j].ip != ip_addr{
-				f[j] = FileLoc{(FileTable[file])[j].MemID, (FileTable[file])[j].ip, (FileTable[file])[j].Timestamp}
+			if (FileTable[file])[j].Ip != ip_addr{
+				f[j] = FileLoc{(FileTable[file])[j].MemID, (FileTable[file])[j].Ip, (FileTable[file])[j].Timestamp}
 			} else {
 				f[j] = FileLoc{new_mem_id, new_ip, int64(time.Now().Unix())}
 			}
@@ -1578,8 +1578,8 @@ func find_assoc_files(ip_addr string) []string{
 		fmt.Printf("Checking file %s\n", k)
 		fmt.Println("The list is ", v)
 		for _, copy := range v{
-			fmt.Printf("Checking file %s ip address %s against our dead address %s\n", k, copy.ip, ip_addr)
-			if copy.ip == ip_addr{
+			fmt.Printf("Checking file %s ip address %s against our dead address %s\n", k, copy.Ip, ip_addr)
+			if copy.Ip == ip_addr{
 				fmt.Printf("Found a match for %s! Adding to vector...\n", k)
 				fvec = append(fvec, k)
 				fmt.Println("Current file_vec: ", fvec)
@@ -1595,8 +1595,8 @@ func find_reliable_replica(file, dead_ip string) string{
 	var max_ts int64 = 0
 	var max_idx int = 5
 	for idx, copy := range FileTable[file]{
-		if copy.ip != dead_ip && memberMap[copy.MemID].alive && copy.Timestamp > max_ts{
-			fmt.Printf("So far found %s at %d as the most recent replica, with timestamp %d\n", copy.ip, idx, copy.Timestamp)
+		if copy.Ip != dead_ip && memberMap[copy.MemID].alive && copy.Timestamp > max_ts{
+			fmt.Printf("So far found %s at %d as the most recent replica, with timestamp %d\n", copy.Ip, idx, copy.Timestamp)
 			max_ts = copy.Timestamp
 			max_idx = idx
 		}
@@ -1606,8 +1606,8 @@ func find_reliable_replica(file, dead_ip string) string{
 		fmt.Printf("We somehow messed up; no replicas found\n")
 	}
 
-	fmt.Printf("Final replica of file %s: %s at %d as the most recent replica, with timestamp %d\n", file, (FileTable[file])[max_idx].ip, max_idx, max_ts)
-	return (FileTable[file])[max_idx].ip 
+	fmt.Printf("Final replica of file %s: %s at %d as the most recent replica, with timestamp %d\n", file, (FileTable[file])[max_idx].Ip, max_idx, max_ts)
+	return (FileTable[file])[max_idx].Ip 
 }
 
 
@@ -1625,7 +1625,7 @@ func find_new_replica(file, dead_ip string) (int, string){
 	a := r.Intn(len(memberMap)-1)+1
 	ip := memberMap[a].ip
 	fmt.Printf("Picked %s at %d\n", ip, a)
-	for ip == dead_ip || ip == (FileTable[file])[0].ip || ip == (FileTable[file])[1].ip || ip == (FileTable[file])[2].ip || ip == (FileTable[file])[3].ip || !memberMap[a].alive{
+	for ip == dead_ip || ip == (FileTable[file])[0].Ip || ip == (FileTable[file])[1].Ip || ip == (FileTable[file])[2].Ip || ip == (FileTable[file])[3].Ip || !memberMap[a].alive{
 
 		fmt.Printf("Rerolling...\n")
 		a = r.Intn(len(memberMap)-1)+1
