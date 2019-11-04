@@ -1375,14 +1375,14 @@ func update_table(my_table map[string]([4]FileLoc), ip, port string) string{
 	fmt.Printf("update_table, ip: %s, port %s...\n", ip, port)
     client, err := rpc.DialHTTP("tcp", ip + ":" + port)
     if err != nil {
-    	fmt.Printf("Error setting up RPC dial...\n")
+    	fmt.Printf("Error setting up RPC dial...\n", err)
         return ""
     }
     var args = Table_args{table: my_table}
     var reply string
     err = client.Call("Zookeeper.Zoo_update_table", args, &reply)
     if err != nil {
-    	fmt.Printf("Error with RPC call...\n")
+    	fmt.Printf("Error with RPC call...\n", err)
         return ""
     }
 	fmt.Printf("Got reply %s...\n", reply)
