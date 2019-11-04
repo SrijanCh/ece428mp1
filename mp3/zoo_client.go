@@ -15,7 +15,7 @@ import(
 	// "log"	
 )
 
-var zoo_ip string = "172.22.154.255"
+var zoo_ip string = "172.22.156.255"//"172.22.154.255"
 const zoo_portnum = "3075"
 const node_portnum = "3074"
 

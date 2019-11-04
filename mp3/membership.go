@@ -1365,7 +1365,7 @@ type Table_args struct{
 }
 
 func (t* Zookeeper) Zoo_update_table(args Table_args, reply *string) error {
-    fmt.Println(args.table)
+    fmt.Println("UPdate request to ",args.table)
     FileTable = args.table
     *reply = ""
     return nil
@@ -1391,6 +1391,7 @@ func update_table(my_table map[string]([4]FileLoc), ip, port string) string{
 
 
 func update_tables(my_table map[string]([4]FileLoc)){
+	fmt.Printf("Updating all tables...\n")
 	for i := 0; i < 4; i++{
 		update_table(FileTable, zoo_list[i], zoo_portnum)
 	}
