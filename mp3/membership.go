@@ -1361,12 +1361,12 @@ func (t* Zookeeper) Zoo_store(args Store_args, reply *string) error {
 
 //FOR LEADER TABLE UPDATES
 type Table_args struct{
-	table map[string]([4]FileLoc)
+	Table map[string]([4]FileLoc)
 }
 
 func (t* Zookeeper) Zoo_update_table(args Table_args, reply *string) error {
-    fmt.Println("UPdate request to ",args.table)
-    FileTable = args.table
+    fmt.Println("UPdate request to ",args.Table)
+    FileTable = args.Table
     *reply = ""
     return nil
 }
@@ -1378,7 +1378,7 @@ func update_table(my_table map[string]([4]FileLoc), ip, port string) string{
     	fmt.Printf("Error setting up RPC dial...\n", err)
         return ""
     }
-    var args = Table_args{table: my_table}
+    var args = Table_args{Table: my_table}
     var reply string
     err = client.Call("Zookeeper.Zoo_update_table", args, &reply)
     if err != nil {
