@@ -29,7 +29,23 @@ func parse_command(command string) {
         if len(split_command) != 3 {
             fmt.Printf("Invalid number of args for put\n")
         } else {
-            c_put(split_command[1], split_command[2])
+            if put_confirm_req(split_command[2], zoo_ip, zoo_portnum) {
+                reader := bufio.NewReader(os.Stdin)
+                text, _ := reader.ReadString('\n')
+                text = strings.TrimSpace(text)
+                fmt.Printf("Are you sure you want to replace recently put file %s? (y/n)\n", split_command[2])
+                if text == "y" {
+                    fmt.Printf("Request confirmed\n")
+                    c_put(split_command[1], split_command[2])
+                } else if text == "n" {
+                    fmt.Printf("Request cancelled\n")
+                } else {
+                    fmt.Printf("Invalid response...cancelling\n")
+                }
+            } else {
+                // Otherwise just do the request. No need to warn user
+                c_put(split_command[1], split_command[2])
+            }
         }
     } else if "get" == split_command[0] {
         if len(split_command) != 3 {
@@ -294,6 +310,24 @@ func store_req(node_ip, ip, port string) string {
     var args = Store_args{Node_ip: node_ip}
     var reply string
     err = client.Call("Zookeeper.Zoo_store", args, &reply)
+    if err != nil {
+        log.Fatal(err)
+    }
+    return reply
+}
+
+type Put_confirm_args struct {
+    Sdfsname string
+}
+
+func put_confirm_req(Filename, zoo_ip, port string) bool {
+    client, err := rpc.DialHTTP("tcp", zoo_ip + ":" + port)
+    if err != nil {
+        log.Fatal(err)
+    }
+    var args = Put_confirm_args{Sdfsname: Filename}
+    var reply bool
+    err = client.Call("Zookeeper.Zoo_put_confirm", args, &reply)
     if err != nil {
         log.Fatal(err)
     }

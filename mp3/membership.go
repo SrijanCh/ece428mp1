@@ -1385,6 +1385,37 @@ func store(ip, port string) string {
     return reply
 }
 
+type Put_confirm_args struct {
+    Sdfsname string
+}
+
+func (t* Zookeeper) Zoo_put_confirm(args Put_confirm_args, reply *bool) error {
+    *reply = put_confirm(args.Sdfsname)
+    return nil
+}
+
+func maxtime (a int64, b int64) int64 {
+    if a > b {
+        return a
+    } else {
+        return b
+    }
+}
+
+func put_confirm (sdfsname string) bool {
+    var ts int64
+    ts = 0
+    // find latest updated node
+    for i  := 0; i < 4; i++ {
+        ts = maxtime(ts, FileTable[sdfsname][i].Timestamp)
+    }
+    // If the time for the latest updated node is less than a minute ago, send the warning message by replying with true
+    if ts - time.Now().UnixNano() < 60000000000 {
+        return true
+    }
+    return false
+}
+
 func del(filename, ip, port string) int64{
 	client, err := rpc.DialHTTP("tcp", ip + ":" + port) //Connect to given address
 	if err != nil {

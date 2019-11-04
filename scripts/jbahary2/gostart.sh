@@ -13,6 +13,7 @@ while [ $i -lt 11 ]; do
             git clone https://github.com/SrijanCh/ece428mp1 src;
         
         elif [ $1 == "update" ]; then
+            ulimit -n 65536
             cd go_work/src
             git pull
         elif [ $1 == "start" ]; then
