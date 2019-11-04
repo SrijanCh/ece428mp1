@@ -30,10 +30,10 @@ func parse_command(command string) {
             fmt.Printf("Invalid number of args for put\n")
         } else {
             if put_confirm_req(split_command[2], zoo_ip, zoo_portnum) {
+                fmt.Printf("Are you sure you want to replace recently put file %s? (y/n)\n", split_command[2])
                 reader := bufio.NewReader(os.Stdin)
                 text, _ := reader.ReadString('\n')
                 text = strings.TrimSpace(text)
-                fmt.Printf("Are you sure you want to replace recently put file %s? (y/n)\n", split_command[2])
                 if text == "y" {
                     fmt.Printf("Request confirmed\n")
                     c_put(split_command[1], split_command[2])
