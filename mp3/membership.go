@@ -1256,6 +1256,7 @@ func (t *Zookeeper) Zoo_put(args Put_args, reply *Put_return) error {
 		FileTable[args.Sdfsname] = f
 
 		fmt.Println("The new table: ", FileTable[args.Sdfsname])
+		fmt.Println("Sending back ", b)
 
 		(*reply).Ips = b
 		(*reply).Timestamp = c
@@ -1365,8 +1366,9 @@ type Table_args struct{
 }
 
 func (t* Zookeeper) Zoo_update_table(args Table_args, reply *string) error {
-    fmt.Println("UPdate request to ",args.Table)
+    fmt.Println("UPdate request to ", args.Table)
     FileTable = args.Table
+    fmt.Println("My new FileTable: ", args.Table)
     *reply = ""
     return nil
 }
@@ -1394,7 +1396,11 @@ func update_tables(my_table map[string]([4]FileLoc)){
 	fmt.Printf("Updating all tables...\n")
 	for i := 0; i < 4; i++{
 		fmt.Printf("Updating table at %s...\n", zoo_list[i])
-		update_table(FileTable, zoo_list[i], zoo_portnum)
+		if myIP != zoo_list[i]{
+			update_table(FileTable, zoo_list[i], zoo_portnum)
+		} //else {
+
+		// }
 	}
 }
 //LEADER TABLE UPDATES ENF
