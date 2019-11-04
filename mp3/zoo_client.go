@@ -95,13 +95,15 @@ func c_put(localname, sdfsname string){
 	if err != nil {
   		fmt.Printf("Error with file stats\n")// Could not obtain stat, handle error
 	}
+    
+    ips, timestamp := put_req(sdfsname, getmyIP(), zoo_ip, zoo_portnum)
 
 	if fi.Size() < 5605500{
 		fmt.Printf("Sending file over in one go\n")
     	Data_r, _ := ioutil.ReadAll(file)
 	
 		fmt.Printf("Contacting zookeeper with %s to get IPs...\n", sdfsname)
-    	ips, timestamp := put_req(sdfsname, getmyIP(), zoo_ip, zoo_portnum)
+    	// ips, timestamp := put_req(sdfsname, getmyIP(), zoo_ip, zoo_portnum)
     	
 		fmt.Printf("Got IPs! Copying file to IPs...\n")
     	//Write the file to the four nodes
@@ -115,21 +117,23 @@ func c_put(localname, sdfsname string){
     	var firstwrite = true
     	n := 1
     	buf := make([]byte, 15000)
+    	reader := bufio.NewReader(file)
+    	// _, err := ioutil.ReadAll(file)
     	for n != 0 {
-    		reader := bufio.NewReader(file)
-    		// _, err := ioutil.ReadAll(file)
     		n, _ = reader.Read(buf) 
-			fmt.Printf("Contacting zookeeper with %s to get IPs...\n", sdfsname)
-    		ips, timestamp := put_req(sdfsname, getmyIP(), zoo_ip, zoo_portnum)
+			// fmt.Printf("Contacting zookeeper with %s to get IPs...\n", sdfsname)
+    		// ips, timestamp := put_req(sdfsname, getmyIP(), zoo_ip, zoo_portnum)
     		
-			fmt.Printf("Got IPs! Copying file to IPs...\n")
+			// fmt.Printf("Got IPs! Copying file to IPs...\n")
     		//Write the file to the four nodes
     		for _,node_ip := range ips{
-    			fmt.Printf("Broadcasting a chunk to %s...\n", node_ip)
+    			fmt.Printf("Broadcasting a chunk of size %d to %s...\n", n, node_ip)
     			if firstwrite{
+    				fmt.Printf("Create the file\n")
     				write(sdfsname, timestamp, string(buf), node_ip, node_portnum)
     				firstwrite = false
     			}else{
+    				fmt.Printf("Appending to the file\n")
     				append(sdfsname, timestamp, string(buf), node_ip, node_portnum)
     			}
     		}
@@ -311,6 +315,7 @@ func write(filename string, ts int64, data, ip, port string) int{
 
 func append(filename string, ts int64, data, ip, port string) int{
 	client, err := rpc.DialHTTP("tcp", ip + ":" + port) //Connect to given address
+	defer client.Close()
 	if err != nil {
 		log.Fatal(err)
 	}

@@ -13,7 +13,7 @@ func main(){
 	rpc.Register(sdfsrpc) //Registers the Querier as our handler
 	rpc.HandleHTTP() //HTTP format requests
 	fmt.Printf("Sdfsrpc server start listening: \n"); //Notify user
-	l, e := net.Listen("tcp", ":3074") //Listen to requests on port 3074
+	l, e := net.Listen("tcp", ":" + node_portnum)//3074") //Listen to requests on port 3074
 	if e != nil {
 		//Error handling
 		log.Fatal("listen error:", e)
