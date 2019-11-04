@@ -43,6 +43,10 @@ var introducer = "172.22.154.255"
 var introducerPort = 8082
 var introPingPeriod = 5
 
+//172.22.156.255
+//172.22.153.4
+//172.22.155.0
+
 var zoo_ip = "172.22.154.255"
 var zoo_portnum = "3075"
 var  node_portnum = "3074"
@@ -959,7 +963,7 @@ func main() {
 
 
 	//OUR STUFF
-		if myIP == zoo_ip {
+		if is_zookeeper(){
 			log.Printf("Starting Zookeeper\n")
 			//DEPLOY ZOOKEEPER
 			go host_zookeeper()
@@ -1348,6 +1352,17 @@ type Store_args struct {
 
 func (t* Zookeeper) Zoo_store(args Store_args, reply *string) error {
     *reply = store(args.Node_ip, node_portnum)
+    return nil
+}
+
+
+type Table_args struct{
+	table map[string]([4]FileLoc)
+}
+func (t* Zookeeper) Zoo_update_table(args Table_args, reply *string) error {
+    fmt.Println(args.table)
+    FileTable = args.table
+    *reply = ""
     return nil
 }
 
