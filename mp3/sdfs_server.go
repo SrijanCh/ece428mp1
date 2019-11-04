@@ -7,7 +7,7 @@ import(
 	"net"
 	"fmt"
 )
-
+const node_portnum = "3074"
 func main(){
 	sdfsrpc := new(sdfsrpc.Sdfsrpc) //Creates a new Querier object to handle the RPCs for this server
 	rpc.Register(sdfsrpc) //Registers the Querier as our handler

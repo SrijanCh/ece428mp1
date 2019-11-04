@@ -46,6 +46,7 @@ var introPingPeriod = 5
 //172.22.156.255
 //172.22.153.4
 //172.22.155.0
+var zoo_list [4]string = [4]string{"172.22.154.255", "172.22.156.255", "172.22.153.4", "172.22.155.0"}
 
 var zoo_ip = "172.22.154.255"
 var zoo_portnum = "3075"
@@ -203,7 +204,7 @@ func checkSuspicion(vid int) {
 			updateMonitors()
 
 			//PUT OUR REPLICATE HERE
-			if(is_zookeeper()){
+			if(is_real_zookeeper()){
 				handle_fail(ip_addr)
 			}
 			break
@@ -816,7 +817,7 @@ func listenOtherPort() (err error) {
 					updateMonitors()
 
 					//PUT OUR REPLICATE HERE
-					if(is_zookeeper()){
+					if(is_real_zookeeper()){
 						handle_fail(ip_addr)
 					}
 					
@@ -949,7 +950,7 @@ func main() {
 
 	time.Sleep(time.Duration(introPingPeriod) * time.Second)
 	
-	if is_zookeeper(){//myIP == introducer {
+	if myIP == introducer {
 		// there should be a delay here - depending on how frequently the introducer is being pinged
 		// if the system already exists in some form, the introducer shouldn't accept join requests until it knows what the maxID is 
 		go completeJoinRequests()
@@ -1260,7 +1261,7 @@ func (t *Zookeeper) Zoo_put(args Put_args, reply *Put_return) error {
 		(*reply).Timestamp = c
 	}
 
-	// return nil
+	update_tables(FileTable)	// return nil
 	//Form our return string, and then return
     // *reply = name + ":\n" + out.String() + "[" + str1 + "]\n";
 	return nil
@@ -1301,6 +1302,7 @@ func (t *Zookeeper) Zoo_get(args Get_args, reply *Get_return) error {
 			}
 		}
 	}
+	update_tables(FileTable)	// return nil
 
 	return nil
 }
@@ -1321,6 +1323,8 @@ func (t *Zookeeper) Zoo_del(args Del_args, reply *int64) error {
 		delete(FileTable, args.Sdfsname)
 	}
 	(*reply) = 0
+	update_tables(FileTable)	// return nil
+
 	return nil
 }
 
@@ -1359,11 +1363,37 @@ func (t* Zookeeper) Zoo_store(args Store_args, reply *string) error {
 type Table_args struct{
 	table map[string]([4]FileLoc)
 }
+
 func (t* Zookeeper) Zoo_update_table(args Table_args, reply *string) error {
     fmt.Println(args.table)
     FileTable = args.table
     *reply = ""
     return nil
+}
+
+func update_table(my_table map[string]([4]FileLoc), ip, port string) string{
+	fmt.Printf("update_table, ip: %s, port %s...\n", ip, port)
+    client, err := rpc.DialHTTP("tcp", ip + ":" + port)
+    if err != nil {
+    	fmt.Printf("Error setting up RPC dial...\n")
+        return ""
+    }
+    var args = Table_args{table: my_table}
+    var reply string
+    err = client.Call("Zookeeper.Zoo_update_table", args, &reply)
+    if err != nil {
+    	fmt.Printf("Error with RPC call...\n")
+        return ""
+    }
+	fmt.Printf("Got reply %s...\n", reply)
+    return reply
+}
+
+
+func update_tables(my_table map[string]([4]FileLoc)){
+	for i := 0; i < 4; i++{
+		update_table(FileTable, zoo_list[i], zoo_portnum)
+	}
 }
 
 // Gather all the files stored at the specified ip address
@@ -1403,7 +1433,10 @@ func maxtime (a int64, b int64) int64 {
 }
 
 func put_confirm (sdfsname string) bool {
+	fmt.Printf("Confirm %s\n", sdfsname)
+	fmt.Println("Table: ", FileTable)
 	if _, ok := FileTable[sdfsname]; ok {
+		fmt.Printf("Found it\n")
     	var ts int64
     	ts = 0
     	// find latest updated node
@@ -1416,6 +1449,7 @@ func put_confirm (sdfsname string) bool {
     	}
     	return false
 	} else {
+		fmt.Printf("Not in table\n")
 		return false
 	}
 }
@@ -1483,10 +1517,12 @@ func host_sdfs(){
 }
 
 func is_zookeeper() bool{
-	return myIP == zoo_ip
+	return myIP == zoo_list[0] || myIP == zoo_list[1] || myIP == zoo_list[2] || myIP == zoo_list[3]
 }
 
-
+func is_real_zookeeper() bool{
+	return myIP == zoo_ip
+}
 
 
 //~~~~~~~~~~~~~~~~~~~~~~~~~~~~NODE FAILURE HANDLING~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
